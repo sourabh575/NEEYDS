@@ -88,5 +88,49 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
+// ✅ GET USER BY ID
+export const getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.json(user);
+
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// ✅ UPDATE USER
+export const updateUser = async (req, res) => {
+  try {
+    const { name, gender, budget, location, preferences } = req.body;
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.name = name ?? user.name;
+    user.gender = gender ?? user.gender;
+    user.budget = budget ?? user.budget;
+    user.location = location ?? user.location;
+    user.preferences = preferences ?? user.preferences;
+
+    await user.save();
+
+    return res.json({
+      message: "Profile updated successfully",
+      user,
+    });
+
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
 
   
