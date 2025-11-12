@@ -104,14 +104,6 @@ roommate-finder/
    PORT=5000
    ```
 
-   Example MongoDB URI:
-   ```
-   MONGO_URI=mongodb://localhost:27017/roommate-finder
-   ```
-   Or for MongoDB Atlas:
-   ```
-   MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/roommate-finder
-   ```
 
 5. **Start the backend server**
    ```bash
