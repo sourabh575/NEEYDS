@@ -35,7 +35,7 @@ function Register() {
       // Save token and user data
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data));
-      navigate("/login");
+      navigate("/profile");
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed. Please try again.");
     }

@@ -107,7 +107,7 @@ export const getUserById = async (req, res) => {
 // ✅ UPDATE USER
 export const updateUser = async (req, res) => {
   try {
-    const { name, gender, budget, location, preferences } = req.body;
+    const { name, gender, budget, location,email, preferences } = req.body;
 
     const user = await User.findById(req.params.id);
 
