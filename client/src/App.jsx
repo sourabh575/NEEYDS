@@ -4,21 +4,73 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import CreatePost from "./pages/CreatePost";
 import Feed from "./pages/Feed";
+import Navbar from "./components/Navbar";
 
-function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route  path="/profile" element={<Profile/>}></Route>
-        <Route path="/create-post" element={<CreatePost />} />
-        <Route path="/Feed" element={<Feed/>}></Route>
-
-      </Routes>
-    </Router>
-  )
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
 }
 
-export default App
+function App() {
+  const token = localStorage.getItem("token");
+
+  return (
+    <Router>
+      {token && <Navbar />}
+      <Routes>
+        {/* Home: show feed when logged in, otherwise go to login */}
+        <Route
+          path="/"
+          element={
+            token ? (
+              <ProtectedRoute>
+                <Feed />
+              </ProtectedRoute>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        {/* Auth routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* App routes (protected) */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/create-post"
+          element={
+            <ProtectedRoute>
+              <CreatePost />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/feed"
+          element={
+            <ProtectedRoute>
+              <Feed />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to={token ? "/feed" : "/login"} replace />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
+

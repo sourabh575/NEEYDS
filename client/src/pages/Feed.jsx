@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../api/axios";
+import "../styles/Feed.css";
 
 function Feed() {
   const [posts, setPosts] = useState([]);
@@ -38,64 +39,95 @@ function Feed() {
     }
   };
 
-  if (loading) return <h3 className="text-center mt-5">Loading posts...</h3>;
+  if (loading) {
+    return (
+      <div className="feed-root">
+        <div className="feed-inner">
+          <p className="feed-loading">Loading posts...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mt-4">
-      <h2 className="mb-4 text-center">Roommate & Room Listings</h2>
+    <div className="feed-root">
+      <div className="feed-inner">
+        <header className="feed-header">
+          <div>
+            <h2>Roommate & Room Listings</h2>
+            <p>Browse fresh posts from people looking to share or find a room.</p>
+          </div>
+          {user && (
+            <div className="feed-user-pill">
+              <div className="feed-avatar">
+                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+              </div>
+              <div className="feed-user-meta">
+                <span className="feed-user-name">{user.name}</span>
+                <span className="feed-user-sub">Logged in</span>
+              </div>
+            </div>
+          )}
+        </header>
 
-      {posts.length === 0 && (
-        <p className="text-center text-muted">No posts available</p>
-      )}
+        {posts.length === 0 && (
+          <div className="feed-empty">
+            <h4>No posts yet</h4>
+            <p>Be the first to add a post and help someone find their next home.</p>
+          </div>
+        )}
 
-      <div className="row">
-        {posts.map((post) => (
-          <div key={post._id} className="col-md-4 mb-4">
-            <div className="card shadow-sm">
-
-              <div className="card-body">
-                <h5 className="card-title">{post.title}</h5>
-
-                <span className="badge bg-primary mb-2">
+        <div className="feed-grid">
+          {posts.map((post) => (
+            <article key={post._id} className="feed-card">
+              <div className="feed-card-header">
+                <h3>{post.title}</h3>
+                <span className={`feed-badge feed-badge-${post.type}`}>
                   {post.type === "join-flat" && "I Have a Room"}
                   {post.type === "partner-up" && "Need a Room"}
                 </span>
+              </div>
 
-                <p className="card-text">
-                  <strong>Location:</strong> {post.location} <br />
-                  <strong>Rent:</strong> ₹{post.rent} <br />
-                  <strong>Preferred Gender:</strong> {post.genderPref} <br />
-                </p>
+              <dl className="feed-meta">
+                <div>
+                  <dt>Location</dt>
+                  <dd>{post.location || "Not specified"}</dd>
+                </div>
+                <div>
+                  <dt>Rent</dt>
+                  <dd>{post.rent ? `₹${post.rent}` : "Not specified"}</dd>
+                </div>
+                <div>
+                  <dt>Preferred Gender</dt>
+                  <dd>{post.genderPref || "Any"}</dd>
+                </div>
+              </dl>
 
-                <p className="card-text text-muted" style={{ fontSize: "14px" }}>
-                  {post.desc}
-                </p>
+              {post.desc && <p className="feed-desc">{post.desc}</p>}
 
+              <footer className="feed-footer">
                 {post.createdBy && (
-                  <p className="text-secondary" style={{ fontSize: "13px" }}>
-                    <strong>Posted by:</strong> {post.createdBy.name}
-                  </p>
+                  <span className="feed-author">
+                    Posted by <strong>{post.createdBy.name}</strong>
+                  </span>
                 )}
 
-                {/* DELETE BUTTON — only if current user owns the post */}
                 {token &&
                   user &&
                   post.createdBy &&
                   post.createdBy._id === user._id && (
                     <button
-                      className="btn btn-danger w-100 mt-2"
+                      className="feed-delete"
                       onClick={() => deletePost(post._id)}
                     >
-                      Delete Post
+                      Delete
                     </button>
                   )}
-              </div>
-
-            </div>
-          </div>
-        ))}
+              </footer>
+            </article>
+          ))}
+        </div>
       </div>
-
     </div>
   );
 }
