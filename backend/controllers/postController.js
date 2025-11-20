@@ -32,11 +32,35 @@ export const createPost = async (req, res) => {
 // ✅ Get all posts
 export const getPosts = async (req, res) => {
   try {
-    const posts = await Post.find()
+      const { type, genderPref, budget, location } = req.query;
+      let query = {};
+
+    // Filter: type = join-flat / partner-up
+    if (type) {
+      query.type = type;
+    }
+
+    // Filter: genderPref = male / female / any
+    if (genderPref) {
+      query.genderPref = genderPref;
+    }
+
+    // Filter: budget => rent <= budget
+    if (budget) {
+      query.rent = { $lte: Number(budget) };
+    }
+
+    // Filter: location (case-insensitive)
+    if (location) {
+      query.location = { $regex: location, $options: "i" };
+    }
+
+    const posts = await Post.find(query)
       .populate("createdBy", "name email location")
-      .sort({ createdAt: -1 }); // latest first
+      .sort({ createdAt: -1 });
 
     res.json(posts);
+
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
