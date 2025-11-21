@@ -82,6 +82,42 @@ export const getPostById = async (req, res) => {
   }
 };
 
+// ✅ Update post
+export const updatePost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Check if the logged-in user is the owner of the post
+    if (post.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(401).json({ message: "Not authorized to update this post" });
+    }
+
+    // Update fields
+    const { title, type, rent, location, genderPref, desc } = req.body;
+    
+    if (title) post.title = title;
+    if (type) post.type = type;
+    if (rent) post.rent = rent;
+    if (location) post.location = location;
+    if (genderPref) post.genderPref = genderPref;
+    if (desc) post.desc = desc;
+
+    const updatedPost = await post.save();
+    
+    // Populate user details before sending response
+    await updatedPost.populate("createdBy", "name email location");
+
+    res.json(updatedPost);
+
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 //delete post
 export const deletePost = async (req, res) => {
   try {

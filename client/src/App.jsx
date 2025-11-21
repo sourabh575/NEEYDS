@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import CreatePost from "./pages/CreatePost";
 import Feed from "./pages/Feed";
+import PostDetail from "./pages/PostDetail";
 import Navbar from "./components/Navbar";
 
 function ProtectedRoute({ children }) {
@@ -61,6 +62,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Feed />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/post/:id"
+          element={
+            <ProtectedRoute>
+              <PostDetail />
             </ProtectedRoute>
           }
         />

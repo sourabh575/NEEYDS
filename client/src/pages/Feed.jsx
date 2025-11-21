@@ -1,42 +1,61 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import "../styles/Feed.css";
 
 function Feed() {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    type: "",
+    genderPref: "",
+    budget: "",
+    location: "",
+  });
+  const [showFilters, setShowFilters] = useState(false);
 
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user")); // logged-in user data
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
-      const res = await API.get("/posts");
+      setLoading(true);
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (filters.type) params.append("type", filters.type);
+      if (filters.genderPref) params.append("genderPref", filters.genderPref);
+      if (filters.budget) params.append("budget", filters.budget);
+      if (filters.location) params.append("location", filters.location);
+
+      const res = await API.get(`/posts?${params.toString()}`);
       setPosts(res.data);
     } catch (error) {
       console.error("Error fetching posts:", error.message);
     } finally {
       setLoading(false);
     }
+  }, [filters]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  const handleFilterChange = (key, value) => {
+    setFilters({ ...filters, [key]: value });
   };
 
-  const deletePost = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this post?")) return;
+  const clearFilters = () => {
+    setFilters({
+      type: "",
+      genderPref: "",
+      budget: "",
+      location: "",
+    });
+  };
 
-    try {
-      await API.delete(`/posts/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      // Remove deleted post from UI instantly
-      setPosts(posts.filter((post) => post._id !== id));
-    } catch (error) {
-      alert(error.response?.data?.message || "Delete failed");
-    }
+  const hasActiveFilters = () => {
+    return filters.type || filters.genderPref || filters.budget || filters.location;
   };
 
   if (loading) {
@@ -70,16 +89,105 @@ function Feed() {
           )}
         </header>
 
-        {posts.length === 0 && (
+        {/* Filter Section */}
+        <div className="feed-filter-container">
+          <div className="feed-filter-header">
+            <button
+              className="feed-filter-toggle"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <span className="filter-icon">🔍</span>
+              <span>Filters</span>
+              {hasActiveFilters() && (
+                <span className="filter-badge">{Object.values(filters).filter(Boolean).length}</span>
+              )}
+              <span className={`filter-arrow ${showFilters ? "open" : ""}`}>▼</span>
+            </button>
+            {hasActiveFilters() && (
+              <button className="feed-filter-clear" onClick={clearFilters}>
+                Clear All
+              </button>
+            )}
+          </div>
+
+          {showFilters && (
+            <div className="feed-filter-panel">
+              <div className="filter-group">
+                <label>Post Type</label>
+                <select
+                  value={filters.type}
+                  onChange={(e) => handleFilterChange("type", e.target.value)}
+                >
+                  <option value="">All Types</option>
+                  <option value="join-flat">I Have a Room</option>
+                  <option value="partner-up">Need a Room</option>
+                </select>
+              </div>
+
+              <div className="filter-group">
+                <label>Gender Preference</label>
+                <select
+                  value={filters.genderPref}
+                  onChange={(e) => handleFilterChange("genderPref", e.target.value)}
+                >
+                  <option value="">Any Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="any">Any</option>
+                </select>
+              </div>
+
+              <div className="filter-group">
+                <label>Max Budget (₹)</label>
+                <input
+                  type="number"
+                  placeholder="e.g., 10000"
+                  value={filters.budget}
+                  onChange={(e) => handleFilterChange("budget", e.target.value)}
+                />
+              </div>
+
+              <div className="filter-group">
+                <label>Location</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Bangalore"
+                  value={filters.location}
+                  onChange={(e) => handleFilterChange("location", e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Results Count */}
+        {!loading && (
+          <div className="feed-results-info">
+            <span>
+              {posts.length} {posts.length === 1 ? "post" : "posts"} found
+              {hasActiveFilters() && " with filters"}
+            </span>
+          </div>
+        )}
+
+        {posts.length === 0 && !loading && (
           <div className="feed-empty">
-            <h4>No posts yet</h4>
-            <p>Be the first to add a post and help someone find their next home.</p>
+            <h4>No posts found</h4>
+            <p>
+              {hasActiveFilters()
+                ? "Try adjusting your filters to see more results."
+                : "Be the first to add a post and help someone find their next home."}
+            </p>
           </div>
         )}
 
         <div className="feed-grid">
           {posts.map((post) => (
-            <article key={post._id} className="feed-card">
+            <article
+              key={post._id}
+              className="feed-card"
+              onClick={() => navigate(`/post/${post._id}`)}
+            >
               <div className="feed-card-header">
                 <h3>{post.title}</h3>
                 <span className={`feed-badge feed-badge-${post.type}`}>
@@ -103,27 +211,22 @@ function Feed() {
                 </div>
               </dl>
 
-              {post.desc && <p className="feed-desc">{post.desc}</p>}
+              {post.desc && (
+                <p className="feed-desc">
+                  {post.desc.length > 100
+                    ? `${post.desc.substring(0, 100)}...`
+                    : post.desc}
+                </p>
+              )}
 
-              <footer className="feed-footer">
-                {post.createdBy && (
+              {post.createdBy && (
+                <div className="feed-author-info">
                   <span className="feed-author">
                     Posted by <strong>{post.createdBy.name}</strong>
                   </span>
-                )}
-
-                {token &&
-                  user &&
-                  post.createdBy &&
-                  post.createdBy._id === user._id && (
-                    <button
-                      className="feed-delete"
-                      onClick={() => deletePost(post._id)}
-                    >
-                      Delete
-                    </button>
-                  )}
-              </footer>
+                  <span className="feed-view-more">View Details →</span>
+                </div>
+              )}
             </article>
           ))}
         </div>
