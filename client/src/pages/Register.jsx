@@ -32,11 +32,22 @@ function Register() {
 
     try {
       const res = await API.post("/users/register", formData);
-      // Save token and user data
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data));
-      navigate("/login");
+      
+      // ✅ Save token and user data
+      if (res.data && res.data.token) {
+        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("user", JSON.stringify(res.data));
+        
+        // ✅ Dispatch custom event to notify App.jsx that token was updated
+        window.dispatchEvent(new Event("tokenUpdated"));
+        
+        // ✅ Redirect to homepage/feed after successful registration
+        navigate("/", { replace: true });
+      } else {
+        setError("Invalid response from server. Please try again.");
+      }
     } catch (err) {
+      console.error("Registration error:", err);
       setError(err.response?.data?.message || "Registration failed. Please try again.");
     }
   };

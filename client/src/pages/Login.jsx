@@ -17,7 +17,7 @@ function Login() {
       const res = await API.post("/users/login", { email, password });
 
       // ✅ Save token + user data
-      if (res.data.token && res.data._id) {
+      if (res.data && res.data.token && res.data._id) {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify({
           _id: res.data._id,
@@ -25,13 +25,17 @@ function Login() {
           email: res.data.email,
         }));
 
-        // ✅ Redirect to profile - localStorage is synchronous so this is safe
-        navigate("/profile", { replace: true });
+        // ✅ Dispatch custom event to notify App.jsx that token was updated
+        window.dispatchEvent(new Event("tokenUpdated"));
+        
+        // ✅ Redirect to homepage
+        navigate("/", { replace: true });
       } else {
         setError("Invalid response from server. Please try again.");
       }
 
     } catch (err) {
+      console.error("Login error:", err);
       setError(err.response?.data?.message || "Login failed. Please check your credentials.");
     }
   };

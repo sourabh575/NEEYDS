@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
@@ -16,7 +17,25 @@ function ProtectedRoute({ children }) {
 }
 
 function App() {
-  const token = localStorage.getItem("token");
+  const [token, setToken] = useState(localStorage.getItem("token"));
+
+  // Listen for token changes (when login/register saves token)
+  useEffect(() => {
+    const handleTokenChange = () => {
+      setToken(localStorage.getItem("token"));
+    };
+
+    // Listen for custom event dispatched by Login/Register components
+    window.addEventListener("tokenUpdated", handleTokenChange);
+    
+    // Also listen for storage events (from other tabs/windows)
+    window.addEventListener("storage", handleTokenChange);
+
+    return () => {
+      window.removeEventListener("tokenUpdated", handleTokenChange);
+      window.removeEventListener("storage", handleTokenChange);
+    };
+  }, []);
 
   return (
     <Router>
@@ -36,9 +55,15 @@ function App() {
           }
         />
 
-        {/* Auth routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Auth routes (redirect to home if already logged in) */}
+        <Route
+          path="/login"
+          element={token ? <Navigate to="/" replace /> : <Login />}
+        />
+        <Route
+          path="/register"
+          element={token ? <Navigate to="/" replace /> : <Register />}
+        />
 
         {/* App routes (protected) */}
         <Route
