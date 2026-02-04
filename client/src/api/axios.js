@@ -1,7 +1,8 @@
 import axios from "axios";
+import { logoutToLogin } from "../utils/auth";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api", // backend base URL
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api", // backend base URL
 });
 
 // Add token to requests automatically
@@ -23,9 +24,7 @@ API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
+      logoutToLogin();
     }
     return Promise.reject(error);
   }

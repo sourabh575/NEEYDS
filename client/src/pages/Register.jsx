@@ -2,6 +2,7 @@ import { useState } from "react";
 import API from "../api/axios";
 import { useNavigate, Link } from "react-router-dom";
 import "../styles/Register.css";
+import { setAuth } from "../utils/auth";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -33,9 +34,9 @@ function Register() {
     try {
       const res = await API.post("/users/register", formData);
       // Save token and user data
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data));
-      navigate("/login");
+      setAuth({ token: res.data.token, user: res.data });
+      // You are already authenticated after register; go to the app, not /login.
+      navigate("/", { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed. Please try again.");
     }

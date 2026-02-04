@@ -2,6 +2,7 @@ import { useState } from "react";
 import API from "../api/axios";
 import { useNavigate, Link } from "react-router-dom";
 import "../styles/Login.css";
+import { setAuth } from "../utils/auth";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -18,15 +19,13 @@ function Login() {
 
       // ✅ Save token + user data
       if (res.data.token && res.data._id) {
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem("user", JSON.stringify({
-          _id: res.data._id,
-          name: res.data.name,
-          email: res.data.email,
-        }));
+        setAuth({
+          token: res.data.token,
+          user: { _id: res.data._id, name: res.data.name, email: res.data.email },
+        });
 
         // ✅ Redirect to profile - localStorage is synchronous so this is safe
-        navigate("/profile", { replace: true });
+        navigate("/", { replace: true });
       } else {
         setError("Invalid response from server. Please try again.");
       }

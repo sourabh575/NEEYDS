@@ -1,21 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
 import "./Navbar.css";
+import { getUserSafe, logoutToLogin } from "../utils/auth";
 
 function Navbar() {
   const navigate = useNavigate();
 
-  const user = (() => {
-    try {
-      return JSON.parse(localStorage.getItem("user"));
-    } catch {
-      return null;
-    }
-  })();
+  const user = getUserSafe();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login", { replace: true });
+    logoutToLogin();
   };
 
   return (

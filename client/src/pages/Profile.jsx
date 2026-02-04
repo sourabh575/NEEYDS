@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import "../styles/Profile.css";
+import { clearAuth, logoutToLogin } from "../utils/auth";
 
 function Profile() {
   const [user, setUser] = useState({});
@@ -28,9 +29,8 @@ function Profile() {
         setUserInfo(parsedUser);
       } catch (err) {
         console.error("Error parsing user data:", err);
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/login");
+        clearAuth();
+        navigate("/login", { replace: true });
       }
     };
 
@@ -52,9 +52,7 @@ function Profile() {
         console.error("Profile fetch error:", err);
         if (err.response?.status === 401) {
           // Token expired or invalid
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          navigate("/login");
+          logoutToLogin();
         } else {
           setError("Could not load profile. Please try again.");
         }
@@ -95,9 +93,7 @@ function Profile() {
     } catch (err) {
       console.error("Update error:", err);
       if (err.response?.status === 401) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/login");
+        logoutToLogin();
       } else {
         setError(err.response?.data?.message || "Update failed. Please try again.");
       }
@@ -106,9 +102,7 @@ function Profile() {
 
   // ✅ Logout function
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
+    logoutToLogin();
   };
 
   // Show loading state while checking auth or fetching data

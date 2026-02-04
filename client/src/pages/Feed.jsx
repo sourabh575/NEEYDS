@@ -16,7 +16,13 @@ function Feed() {
   const [showFilters, setShowFilters] = useState(false);
 
   const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user")); // logged-in user data
+  const user = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("user"));
+    } catch {
+      return null;
+    }
+  })(); // logged-in user data
 
   const fetchPosts = useCallback(async () => {
     try {

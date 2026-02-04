@@ -1,0 +1,20 @@
+{
+  "name": "roommate-finder",
+  "version": "1.0.0",
+  "description": "this is my full stack project",
+  "homepage": "https://github.com/sourabh575/NEEYDS#readme",
+  "bugs": {
+    "url": "https://github.com/sourabh575/NEEYDS/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sourabh575/NEEYDS.git"
+  },
+  "license": "ISC",
+  "author": "sourabh patel",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

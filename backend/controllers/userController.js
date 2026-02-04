@@ -13,6 +13,17 @@ export const registerUser = async (req, res) => {
   try {
     const { name, email, password, gender, budget, location, preferences } = req.body;
 
+    // Validate required fields
+    if (!name || !email || !password || !gender) {
+      return res.status(400).json({ message: "Please provide name, email, password, and gender" });
+    }
+
+    // Check if JWT_SECRET is configured
+    if (!process.env.JWT_SECRET) {
+      console.error("❌ JWT_SECRET is not set in environment variables");
+      return res.status(500).json({ message: "Server configuration error" });
+    }
+
     // Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -30,15 +41,24 @@ export const registerUser = async (req, res) => {
       preferences,
     });
 
+    const token = generateToken(user._id);
+
     return res.status(201).json({
       _id: user._id,
       name: user.name,
       email: user.email,
-      token: generateToken(user._id),
+      token: token,
     });
 
   } catch (error) {
     console.error("❌ Register Error:", error);
+    
+    // Handle validation errors from Mongoose
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ message: messages.join(", ") });
+    }
+    
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -46,15 +66,26 @@ export const registerUser = async (req, res) => {
 
 // ✅ LOGIN USER
 export const loginUser = async (req, res) => {
-  const { email, password } = req.body;
-
   try {
-    console.log("Incoming Login Request:", req.body);
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ message: "Please provide email and password" });
+    }
+
+    // Check if JWT_SECRET is configured
+    if (!process.env.JWT_SECRET) {
+      console.error("❌ JWT_SECRET is not set in environment variables");
+      return res.status(500).json({ message: "Server configuration error" });
+    }
+
+    console.log("Incoming Login Request:", { email });
 
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(401).json({ message: "Invalid email or password" });
     }
 
     // Validate password
@@ -64,11 +95,13 @@ export const loginUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    const token = generateToken(user._id);
+
     return res.json({
       _id: user._id,
       name: user.name,
       email: user.email,
-      token: generateToken(user._id),
+      token: token,
     });
 
   } catch (error) {

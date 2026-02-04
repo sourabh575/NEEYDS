@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
@@ -7,8 +8,7 @@ import Feed from "./pages/Feed";
 import PostDetail from "./pages/PostDetail";
 import Navbar from "./components/Navbar";
 
-function ProtectedRoute({ children }) {
-  const token = localStorage.getItem("token");
+function ProtectedRoute({ children, token }) {
   if (!token) {
     return <Navigate to="/login" replace />;
   }
@@ -16,18 +16,41 @@ function ProtectedRoute({ children }) {
 }
 
 function App() {
-  const token = localStorage.getItem("token");
+  const [auth, setAuth] = useState(() => ({
+    token: localStorage.getItem("token"),
+    user: localStorage.getItem("user"),
+  }));
+
+  useEffect(() => {
+    const syncAuthFromStorage = () =>
+      setAuth({
+        token: localStorage.getItem("token"),
+        user: localStorage.getItem("user"),
+      });
+
+    // Same-tab updates (we dispatch this on login/logout)
+    window.addEventListener("authchange", syncAuthFromStorage);
+    // Cross-tab updates
+    window.addEventListener("storage", syncAuthFromStorage);
+
+    return () => {
+      window.removeEventListener("authchange", syncAuthFromStorage);
+      window.removeEventListener("storage", syncAuthFromStorage);
+    };
+  }, []);
+
+  const isAuthed = Boolean(auth.token && auth.user);
 
   return (
     <Router>
-      {token && <Navbar />}
+      {isAuthed && <Navbar />}
       <Routes>
         {/* Home: show feed when logged in, otherwise go to login */}
         <Route
           path="/"
           element={
-            token ? (
-              <ProtectedRoute>
+            isAuthed ? (
+              <ProtectedRoute token={auth.token}>
                 <Feed />
               </ProtectedRoute>
             ) : (
@@ -44,7 +67,7 @@ function App() {
         <Route
           path="/profile"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute token={auth.token}>
               <Profile />
             </ProtectedRoute>
           }
@@ -52,7 +75,7 @@ function App() {
         <Route
           path="/create-post"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute token={auth.token}>
               <CreatePost />
             </ProtectedRoute>
           }
@@ -60,7 +83,7 @@ function App() {
         <Route
           path="/feed"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute token={auth.token}>
               <Feed />
             </ProtectedRoute>
           }
@@ -68,14 +91,14 @@ function App() {
         <Route
           path="/post/:id"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute token={auth.token}>
               <PostDetail />
             </ProtectedRoute>
           }
         />
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to={token ? "/feed" : "/login"} replace />} />
+        <Route path="*" element={<Navigate to={isAuthed ? "/feed" : "/login"} replace />} />
       </Routes>
     </Router>
   );
