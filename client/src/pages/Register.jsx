@@ -38,6 +38,7 @@ function Register() {
       // You are already authenticated after register; go to the app, not /login.
       navigate("/", { replace: true });
     } catch (err) {
+      console.error("Registration error:", err);
       setError(err.response?.data?.message || "Registration failed. Please try again.");
     }
   };

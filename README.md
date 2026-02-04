@@ -263,7 +263,7 @@ roommate-finder/
 4. **Set Environment Variables**
    Click "Environment" tab and add:
    - `MONGO_URI`: Your MongoDB Atlas connection string
-     - Format: `mongodb+srv://username:password@cluster.mongodb.net/dbname?retryWrites=true&w=majority`
+  
    - `JWT_SECRET`: A long, random string (e.g., use `openssl rand -base64 32`)
    - `PORT`: `10000` (Render sets this automatically, but you can specify)
    - `FRONTEND_URL`: Your Vercel frontend URL (e.g., `https://your-app.vercel.app`)

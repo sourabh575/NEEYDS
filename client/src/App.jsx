@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
@@ -59,9 +59,15 @@ function App() {
           }
         />
 
-        {/* Auth routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Auth routes (redirect to home if already logged in) */}
+        <Route
+          path="/login"
+          element={isAuthed ? <Navigate to="/" replace /> : <Login />}
+        />
+        <Route
+          path="/register"
+          element={isAuthed ? <Navigate to="/" replace /> : <Register />}
+        />
 
         {/* App routes (protected) */}
         <Route
