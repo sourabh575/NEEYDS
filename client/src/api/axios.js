@@ -2,7 +2,7 @@ import axios from "axios";
 import { logoutToLogin } from "../utils/auth";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL,
+  baseURL: "http://localhost:5000/api",
   withCredentials: true,
 });
 

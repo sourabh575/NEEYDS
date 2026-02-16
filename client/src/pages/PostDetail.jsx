@@ -268,11 +268,6 @@ function PostDetail() {
                 <div className="author-info">
                   <span className="author-name">{post.createdBy.name}</span>
                   <span className="author-email">{post.createdBy.email}</span>
-                  {post.createdBy.location && (
-                    <span className="author-location">
-                      📍 {post.createdBy.location}
-                    </span>
-                  )}
                 </div>
               </div>
             )}

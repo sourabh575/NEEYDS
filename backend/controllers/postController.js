@@ -56,7 +56,7 @@ export const getPosts = async (req, res) => {
     }
 
     const posts = await Post.find(query)
-      .populate("createdBy", "name email location")
+      .populate("createdBy", "name email")
       .sort({ createdAt: -1 });
 
     res.json(posts);
@@ -70,7 +70,7 @@ export const getPosts = async (req, res) => {
 export const getPostById = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id)
-      .populate("createdBy", "name email location");
+      .populate("createdBy", "name email");
 
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
@@ -109,7 +109,7 @@ export const updatePost = async (req, res) => {
     const updatedPost = await post.save();
     
     // Populate user details before sending response
-    await updatedPost.populate("createdBy", "name email location");
+    await updatedPost.populate("createdBy", "name email");
 
     res.json(updatedPost);
 

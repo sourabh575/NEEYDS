@@ -2,11 +2,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { useState, useEffect } from "react";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import VerifyEmail from "./pages/VerifyEmail";
 import Profile from "./pages/Profile";
 import CreatePost from "./pages/CreatePost";
 import Feed from "./pages/Feed";
 import PostDetail from "./pages/PostDetail";
 import Navbar from "./components/Navbar";
+import Loginbygoogle from "./pages/Loginbygoogle";
+
 
 function ProtectedRoute({ children, token }) {
   if (!token) {
@@ -68,6 +71,10 @@ function App() {
           path="/register"
           element={isAuthed ? <Navigate to="/" replace /> : <Register />}
         />
+        <Route
+          path="/verify-email"
+          element={<VerifyEmail />}
+        />
 
         {/* App routes (protected) */}
         <Route
@@ -105,10 +112,12 @@ function App() {
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to={isAuthed ? "/feed" : "/login"} replace />} />
+        <Route path="/google-login" element={<Loginbygoogle />} />
       </Routes>
     </Router>
   );
 }
+
 
 export default App;
 

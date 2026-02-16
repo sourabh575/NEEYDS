@@ -143,39 +143,18 @@ function Profile() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="location">Location</label>
-            <input
-              id="location"
-              type="text"
-              className="form-input"
-              placeholder="Enter your location"
-              value={user?.location || ""}
-              onChange={(e) => setUser({ ...user, location: e.target.value })}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="budget">Budget (₹)</label>
-            <input
-              id="budget"
-              type="number"
-              className="form-input"
-              placeholder="Enter your budget"
-              value={user?.budget || ""}
-              onChange={(e) => setUser({ ...user, budget: e.target.value })}
-              min="0"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="preferences">Preferences</label>
-            <textarea
-              id="preferences"
-              className="form-textarea"
-              placeholder="Tell us about your preferences (e.g., non-smoker, tidy, vegetarian)"
-              value={user?.preferences || ""}
-              onChange={(e) => setUser({ ...user, preferences: e.target.value })}
-            />
+            <label htmlFor="gender">Gender</label>
+            <select
+              id="gender"
+              className="form-select"
+              value={user?.gender || ""}
+              onChange={(e) => setUser({ ...user, gender: e.target.value })}
+            >
+              <option value="">Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
 
           <button className="profile-button" type="submit">
