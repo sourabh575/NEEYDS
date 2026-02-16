@@ -2,11 +2,11 @@ import axios from "axios";
 import { logoutToLogin } from "../utils/auth";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
 });
 
-// Add token to requests automatically
+// Attach token automatically
 API.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -15,12 +15,10 @@ API.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Handle 401 errors (unauthorized) - redirect to login
+// Handle 401
 API.interceptors.response.use(
   (response) => response,
   (error) => {
