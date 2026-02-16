@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
-
 import API from "../api/axios";
 import { setAuth } from "../utils/auth";
 import AuthNavbar from "../components/AuthNavbar";
@@ -11,46 +10,27 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
 
-  // 🔐 Normal login
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
     try {
       const res = await API.post("/users/login", { email, password });
 
-      if (res.data.token && res.data._id) {
-        setAuth({
-          token: res.data.token,
-          user: {
-            _id: res.data._id,
-            name: res.data.name,
-            email: res.data.email,
-          },
-        });
+      setAuth({
+        token: res.data.token,
+        user: res.data,
+      });
 
-        navigate("/", { replace: true });
-      } else {
-        setError("Invalid response from server.");
-      }
+      navigate("/", { replace: true });
     } catch (err) {
-      console.error("Login error:", err);
-      setError(
-        err.response?.data?.message ||
-          "Login failed. Please check your credentials."
-      );
-    } finally {
-      setLoading(false);
+      setError(err.response?.data?.message || "Login failed");
     }
   };
 
-  // 🔥 Google login
-  const handleGoogleLogin = async (credentialResponse) => {
+  const handleGoogleSuccess = async (credentialResponse) => {
     try {
       const res = await API.post("/users/google-login", {
         token: credentialResponse.credential,
@@ -58,85 +38,56 @@ function Login() {
 
       setAuth({
         token: res.data.token,
-        user: {
-          _id: res.data._id,
-          name: res.data.name,
-          email: res.data.email,
-        },
+        user: res.data,
       });
 
       navigate("/", { replace: true });
     } catch (error) {
-      console.error("Google login failed:", error);
-      setError("Google login failed. Try again.");
+      console.error("Google login failed", error);
+      setError("Google login failed");
     }
   };
 
   return (
     <>
       <AuthNavbar />
-
       <div className="login-container">
         <div className="login-card">
-          <div className="login-header">
-            <h2>Welcome Back</h2>
-            <p>Sign in to continue to your account</p>
-          </div>
+          <h2>Login</h2>
 
           {error && <div className="error-message">{error}</div>}
 
-          {/* Normal Login Form */}
-          <form className="login-form" onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Email Address</label>
-              <input
-                type="email"
-                className="form-input"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
+          <form onSubmit={handleSubmit}>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
 
-            <div className="form-group">
-              <label>Password</label>
-              <input
-                type="password"
-                className="form-input"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
 
-            <button className="login-button" type="submit" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
+            <button type="submit">Login</button>
           </form>
 
-          {/* Divider */}
-          <div style={{ margin: "20px 0", textAlign: "center" }}>
+          <div style={{ marginTop: "20px", textAlign: "center" }}>
             <p>OR</p>
-          </div>
 
-          {/* Google Login Button */}
-          <div style={{ display: "flex", justifyContent: "center" }}>
             <GoogleLogin
-              onSuccess={handleGoogleLogin}
-              onError={() => {
-                console.log("Google Login Failed");
-                setError("Google login failed.");
-              }}
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError("Google login failed")}
             />
           </div>
 
           <div className="login-footer">
-            Don’t have an account?{" "}
-            <Link to="/register">Create an account</Link>
+            Don't have an account? <Link to="/register">Register</Link>
           </div>
         </div>
       </div>
