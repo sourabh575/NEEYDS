@@ -10,10 +10,9 @@ function Profile() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [userInfo, setUserInfo] = useState(null);
-
   const navigate = useNavigate();
 
-  // ✅ Check authentication and get user info
+  // Check authentication and get user info
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem("token");
@@ -37,7 +36,7 @@ function Profile() {
     checkAuth();
   }, [navigate]);
 
-  // ✅ Get user info from API
+  // Get user info from API
   useEffect(() => {
     const fetchUser = async () => {
       if (!userInfo?._id) return;
@@ -45,13 +44,11 @@ function Profile() {
       try {
         setLoading(true);
         setError("");
-        // Axios interceptor automatically adds the token
         const res = await API.get(`/users/${userInfo._id}`);
         setUser(res.data);
       } catch (err) {
         console.error("Profile fetch error:", err);
         if (err.response?.status === 401) {
-          // Token expired or invalid
           logoutToLogin();
         } else {
           setError("Could not load profile. Please try again.");
@@ -66,7 +63,7 @@ function Profile() {
     }
   }, [userInfo, navigate]);
 
-  // ✅ Update user
+  // Update user
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMsg("");
@@ -78,17 +75,14 @@ function Profile() {
     }
 
     try {
-      // Axios interceptor automatically adds the token
       const res = await API.put(`/users/${userInfo._id}`, user);
       setMsg("Profile updated successfully!");
       setUser(res.data.user || user);
-      // Update localStorage with new user data
       if (res.data.user) {
         const updatedUser = { ...userInfo, ...res.data.user };
         localStorage.setItem("user", JSON.stringify(updatedUser));
         setUserInfo(updatedUser);
       }
-      // Clear message after 3 seconds
       setTimeout(() => setMsg(""), 3000);
     } catch (err) {
       console.error("Update error:", err);
@@ -100,18 +94,19 @@ function Profile() {
     }
   };
 
-  // ✅ Logout function
+  // Logout function
   const handleLogout = () => {
     logoutToLogin();
   };
 
-  // Show loading state while checking auth or fetching data
+  // Show loading state
   if (loading || !userInfo) {
     return (
       <div className="profile-container">
         <div className="profile-card">
-          <div style={{ textAlign: "center", padding: "2rem" }}>
-            <p>Loading profile...</p>
+          <div className="profile-loading">
+            <div className="profile-loading-spinner"></div>
+            <p>Loading your profile...</p>
           </div>
         </div>
       </div>
@@ -121,52 +116,90 @@ function Profile() {
   return (
     <div className="profile-container">
       <div className="profile-card">
-        <div className="profile-header">
-          <h2>My Profile</h2>
-          {user?.email && <p className="user-email">{user.email}</p>}
+        {/* Avatar Section */}
+        <div className="profile-avatar-section">
+          <div className="profile-avatar-wrapper">
+            {user?.profileImage ? (
+              <img src={user.profileImage} alt={user.name} className="profile-avatar" />
+            ) : (
+              <div className="profile-avatar-placeholder">
+                {(user?.name || "U").charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div>
+            <h2 className="profile-user-name">{user?.name || "Your Name"}</h2>
+            <p className="profile-user-email">{user?.email || "email@example.com"}</p>
+          </div>
         </div>
 
-        {msg && <div className="success-message">{msg}</div>}
-        {error && <div className="error-message">{error}</div>}
+        {/* Messages */}
+        {msg && <div className="profile-success-message">{msg}</div>}
+        {error && <div className="profile-error-message">{error}</div>}
 
+        {/* Form */}
         <form className="profile-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="name">Full Name</label>
+          <div className="profile-form-group">
+            <label className="profile-form-label" htmlFor="name">Full Name</label>
             <input
               id="name"
               type="text"
-              className="form-input"
+              className="profile-form-input"
               placeholder="Enter your name"
               value={user?.name || ""}
               onChange={(e) => setUser({ ...user, name: e.target.value })}
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="gender">Gender</label>
+          <div className="profile-form-group">
+            <label className="profile-form-label" htmlFor="age">Age (Optional)</label>
+            <input
+              id="age"
+              type="number"
+              className="profile-form-input"
+              placeholder="Enter your age"
+              value={user?.age || ""}
+              onChange={(e) => setUser({ ...user, age: parseInt(e.target.value) || "" })}
+            />
+          </div>
+
+          <div className="profile-form-group">
+            <label className="profile-form-label" htmlFor="gender">Gender</label>
             <select
               id="gender"
-              className="form-select"
+              className="profile-form-select"
               value={user?.gender || ""}
               onChange={(e) => setUser({ ...user, gender: e.target.value })}
             >
-              <option value="">Select gender</option>
+              <option value="">Select your gender</option>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
               <option value="Other">Other</option>
             </select>
           </div>
 
-          <button className="profile-button" type="submit">
-            Save Changes
-          </button>
-        </form>
+          <div className="profile-form-group">
+            <label className="profile-form-label" htmlFor="location">Location (Optional)</label>
+            <input
+              id="location"
+              type="text"
+              className="profile-form-input"
+              placeholder="e.g., Mumbai, Bangalore"
+              value={user?.location || ""}
+              onChange={(e) => setUser({ ...user, location: e.target.value })}
+            />
+          </div>
 
-        <div className="profile-actions">
-          <button className="logout-button" type="button" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
+          {/* Buttons */}
+          <div className="profile-buttons">
+            <button className="profile-button" type="submit">
+              Save Changes
+            </button>
+            <button className="logout-button" type="button" onClick={handleLogout}>
+              Logout
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

@@ -3,29 +3,28 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
-    name: { 
-      type: String, 
-      required: true 
+    name: {
+      type: String,
+      required: true,
     },
 
-    email: { 
-      type: String, 
-      required: true, 
-      unique: true 
+    email: {
+      type: String,
+      required: true,
+      unique: true,
     },
 
-    password: { 
-      type: String 
+    password: {
+      type: String,
       // Not required because Google users won't have password
     },
 
     gender: {
       type: String,
       enum: ["Male", "Female", "Other"],
-      required: false, // Google users may not provide this
+      required: false,
     },
 
-    // 🔹 Google OAuth fields
     googleId: {
       type: String,
     },
@@ -40,10 +39,9 @@ const userSchema = new mongoose.Schema(
       default: "local",
     },
 
-    // 🔹 Email verification
     isEmailVerified: {
       type: Boolean,
-      default: false,
+      default: true,
     },
 
     emailVerifyToken: String,
@@ -52,11 +50,8 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-
-
-// 🔒 Encrypt password before saving (ONLY for local users)
 userSchema.pre("save", async function (next) {
-  if (!this.password) return next(); // skip for Google users
+  if (!this.password) return next();
   if (!this.isModified("password")) return next();
 
   const salt = await bcrypt.genSalt(10);
@@ -64,14 +59,10 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-
-// 🧠 Compare passwords (login)
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  if (!this.password) return false; // Google users don't have password
+  if (!this.password) return false;
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
 const User = mongoose.model("User", userSchema);
 export default User;
-
-

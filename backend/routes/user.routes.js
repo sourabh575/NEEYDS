@@ -5,7 +5,6 @@ import {
   getUserProfile,
   registerUser,
   loginUser,
-  verifyEmail,
 } from "../controllers/userController.js";
 import protect from "../middleware/authMiddleware.js";
 import { googleLogin } from "../controllers/googleLogin.js";
@@ -13,7 +12,6 @@ import { googleLogin } from "../controllers/googleLogin.js";
 const router = express.Router();
 
 // Public routes
-router.get("/verify-email", verifyEmail);
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 

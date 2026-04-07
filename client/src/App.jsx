@@ -2,18 +2,26 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { useState, useEffect } from "react";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import VerifyEmail from "./pages/VerifyEmail";
 import Profile from "./pages/Profile";
 import CreatePost from "./pages/CreatePost";
 import Feed from "./pages/Feed";
 import PostDetail from "./pages/PostDetail";
+import UserProfileDetail from "./pages/UserProfileDetail";
 import Navbar from "./components/Navbar";
 import Loginbygoogle from "./pages/Loginbygoogle";
+import LandingPage from "./pages/LandingPage";
 
-
-function ProtectedRoute({ children, token }) {
+function ProtectedRoute({ children, token, redirectTo = "/login" }) {
   if (!token) {
-    return <Navigate to="/login" replace />;
+    return (
+      <Navigate
+        to={redirectTo}
+        replace
+        state={{
+          authPrompt: "Please login to continue",
+        }}
+      />
+    );
   }
   return children;
 }
@@ -31,9 +39,7 @@ function App() {
         user: localStorage.getItem("user"),
       });
 
-    // Same-tab updates (we dispatch this on login/logout)
     window.addEventListener("authchange", syncAuthFromStorage);
-    // Cross-tab updates
     window.addEventListener("storage", syncAuthFromStorage);
 
     return () => {
@@ -48,7 +54,6 @@ function App() {
     <Router>
       {isAuthed && <Navbar />}
       <Routes>
-        {/* Home: show feed when logged in, otherwise go to login */}
         <Route
           path="/"
           element={
@@ -57,12 +62,11 @@ function App() {
                 <Feed />
               </ProtectedRoute>
             ) : (
-              <Navigate to="/login" replace />
+              <LandingPage />
             )
           }
         />
 
-        {/* Auth routes (redirect to home if already logged in) */}
         <Route
           path="/login"
           element={isAuthed ? <Navigate to="/" replace /> : <Login />}
@@ -71,12 +75,7 @@ function App() {
           path="/register"
           element={isAuthed ? <Navigate to="/" replace /> : <Register />}
         />
-        <Route
-          path="/verify-email"
-          element={<VerifyEmail />}
-        />
 
-        {/* App routes (protected) */}
         <Route
           path="/profile"
           element={
@@ -109,15 +108,20 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/profile/:userId"
+          element={
+            <ProtectedRoute token={auth.token}>
+              <UserProfileDetail />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to={isAuthed ? "/feed" : "/login"} replace />} />
+        <Route path="*" element={<Navigate to={isAuthed ? "/feed" : "/"} replace />} />
         <Route path="/google-login" element={<Loginbygoogle />} />
       </Routes>
     </Router>
   );
 }
 
-
 export default App;
-

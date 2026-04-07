@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api/axios";
+import ImageGallery from "../components/ImageGallery";
+import { normalizeImageUrl, normalizePhotoList } from "../utils/imageUrls";
 import "../styles/PostDetail.css";
 
 function PostDetail() {
@@ -8,15 +10,9 @@ function PostDetail() {
   const navigate = useNavigate();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({
-    title: "",
-    type: "",
-    rent: "",
-    location: "",
-    genderPref: "",
-    desc: "",
-  });
+  const [editForm, setEditForm] = useState({});
 
   const token = localStorage.getItem("token");
   const user = (() => {
@@ -35,18 +31,10 @@ function PostDetail() {
     try {
       const res = await API.get(`/posts/${id}`);
       setPost(res.data);
-      setEditForm({
-        title: res.data.title,
-        type: res.data.type,
-        rent: res.data.rent,
-        location: res.data.location,
-        genderPref: res.data.genderPref,
-        desc: res.data.desc,
-      });
+      setEditForm(res.data);
     } catch (error) {
-      console.error("Error fetching post:", error.message);
-      alert("Post not found");
-      navigate("/feed");
+      console.error("Error fetching post:", error);
+      setError("Post not found");
     } finally {
       setLoading(false);
     }
@@ -58,14 +46,7 @@ function PostDetail() {
 
   const cancelEditing = () => {
     setIsEditing(false);
-    setEditForm({
-      title: post.title,
-      type: post.type,
-      rent: post.rent,
-      location: post.location,
-      genderPref: post.genderPref,
-      desc: post.desc,
-    });
+    setEditForm(post);
   };
 
   const updatePost = async () => {
@@ -74,6 +55,7 @@ function PostDetail() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPost(res.data);
+      setEditForm(res.data);
       setIsEditing(false);
       alert("Post updated successfully!");
     } catch (error) {
@@ -107,11 +89,12 @@ function PostDetail() {
     );
   }
 
-  if (!post) {
+  if (error || !post) {
     return (
       <div className="post-detail-root">
         <div className="post-detail-container">
-          <p className="post-detail-error">Post not found</p>
+          <p className="post-detail-error">{error || "Post not found"}</p>
+          <button onClick={() => navigate("/feed")}>Back to Feed</button>
         </div>
       </div>
     );
@@ -129,49 +112,32 @@ function PostDetail() {
             <h2>Edit Post</h2>
             <div className="post-detail-form">
               <div className="form-group">
-                <label>Title</label>
+                <label>Name</label>
                 <input
                   type="text"
-                  placeholder="Title"
-                  value={editForm.title}
+                  value={editForm.name || ""}
                   onChange={(e) =>
-                    setEditForm({ ...editForm, title: e.target.value })
+                    setEditForm({ ...editForm, name: e.target.value })
                   }
                 />
               </div>
 
-              <div className="form-group">
-                <label>Post Type</label>
-                <select
-                  value={editForm.type}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, type: e.target.value })
-                  }
-                >
-                  <option value="join-flat">I Have a Room</option>
-                  <option value="partner-up">Need a Room</option>
-                </select>
-              </div>
-
               <div className="form-row">
                 <div className="form-group">
-                  <label>Rent (₹)</label>
+                  <label>Age</label>
                   <input
                     type="number"
-                    placeholder="Rent"
-                    value={editForm.rent}
+                    value={editForm.age || ""}
                     onChange={(e) =>
-                      setEditForm({ ...editForm, rent: e.target.value })
+                      setEditForm({ ...editForm, age: e.target.value })
                     }
                   />
                 </div>
-
                 <div className="form-group">
                   <label>Location</label>
                   <input
                     type="text"
-                    placeholder="Location"
-                    value={editForm.location}
+                    value={editForm.location || ""}
                     onChange={(e) =>
                       setEditForm({ ...editForm, location: e.target.value })
                     }
@@ -180,30 +146,82 @@ function PostDetail() {
               </div>
 
               <div className="form-group">
-                <label>Preferred Gender</label>
-                <select
-                  value={editForm.genderPref}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, genderPref: e.target.value })
-                  }
-                >
-                  <option value="any">Any</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div>
-
-              <div className="form-group">
                 <label>Description</label>
                 <textarea
-                  placeholder="Description"
-                  value={editForm.desc}
+                  value={editForm.description || ""}
                   onChange={(e) =>
-                    setEditForm({ ...editForm, desc: e.target.value })
+                    setEditForm({ ...editForm, description: e.target.value })
                   }
-                  rows="6"
+                  rows="4"
                 ></textarea>
               </div>
+
+              {post.type === "join-my-flat" && (
+                <>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Rent Per Person (₹)</label>
+                      <input
+                        type="number"
+                        value={editForm.rentPerPerson || ""}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            rentPerPerson: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Sharing Type</label>
+                      <select
+                        value={editForm.sharingType || ""}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            sharingType: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">Select</option>
+                        <option value="single">Single</option>
+                        <option value="double">Double</option>
+                        <option value="triple">Triple</option>
+                      </select>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {post.type === "partner-up" && (
+                <>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Budget (₹)</label>
+                      <input
+                        type="number"
+                        value={editForm.budget || ""}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, budget: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Preferred Location</label>
+                      <input
+                        type="text"
+                        value={editForm.preferredLocation || ""}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            preferredLocation: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div className="post-detail-actions">
                 <button className="btn-save" onClick={updatePost}>
@@ -219,9 +237,15 @@ function PostDetail() {
           <div className="post-detail-card">
             <div className="post-detail-header">
               <div>
-                <h1>{post.title}</h1>
-                <span className={`post-badge post-badge-${post.type}`}>
-                  {post.type === "join-flat" && "I Have a Room"}
+                <h1>{post.name}</h1>
+                <span
+                  className={`post-badge ${
+                    post.type === "join-my-flat"
+                      ? "post-badge-join-my-flat"
+                      : "post-badge-partner-up"
+                  }`}
+                >
+                  {post.type === "join-my-flat" && "I Have a Room"}
                   {post.type === "partner-up" && "Need a Room"}
                 </span>
               </div>
@@ -237,33 +261,139 @@ function PostDetail() {
               )}
             </div>
 
+            {post.type === "join-my-flat" ? (
+              <div className="post-detail-hero">
+                <ImageGallery
+                  images={normalizePhotoList(post.roomPhotos)}
+                  title={post.name || "Listing"}
+                  roomType={post.roomType}
+                  placeholderText="Room photos not provided yet"
+                />
+              </div>
+            ) : (
+              <div className="post-detail-hero post-detail-hero-partner">
+                {post.profileImage ? (
+                  <img
+                    className="post-detail-profilehero-img"
+                    src={normalizeImageUrl(post.profileImage)}
+                    alt={post.name}
+                  />
+                ) : (
+                  <div className="post-detail-profilehero-placeholder">
+                    <div className="placeholder-icon">🔍</div>
+                    <div className="placeholder-text">No image provided</div>
+                  </div>
+                )}
+                <div className="post-detail-hero-partner-overlay">
+                  Need a Room
+                </div>
+              </div>
+            )}
+
             <div className="post-detail-meta">
+              <div className="meta-item">
+                <span className="meta-label">👤 Age & Gender</span>
+                <span className="meta-value">{post.age} • {post.gender}</span>
+              </div>
               <div className="meta-item">
                 <span className="meta-label">📍 Location</span>
                 <span className="meta-value">{post.location}</span>
               </div>
               <div className="meta-item">
-                <span className="meta-label">💰 Rent</span>
-                <span className="meta-value">₹{post.rent}/month</span>
+                <span className="meta-label">💼 Occupation</span>
+                <span className="meta-value">{post.occupation}</span>
               </div>
               <div className="meta-item">
                 <span className="meta-label">👥 Gender Preference</span>
                 <span className="meta-value">
-                  {post.genderPref.charAt(0).toUpperCase() +
-                    post.genderPref.slice(1)}
+                  {post.genderPreference?.charAt(0).toUpperCase() +
+                    post.genderPreference?.slice(1)}
                 </span>
               </div>
+
+              {post.type === "join-my-flat" && post.rentPerPerson && (
+                <div className="meta-item">
+                  <span className="meta-label">💰 Rent Per Person</span>
+                  <span className="meta-value">₹{post.rentPerPerson}/month</span>
+                </div>
+              )}
+
+              {post.type === "partner-up" && post.budget && (
+                <div className="meta-item">
+                  <span className="meta-label">💰 Budget</span>
+                  <span className="meta-value">₹{post.budget}/month</span>
+                </div>
+              )}
             </div>
+
+            {post.type === "join-my-flat" && (
+              <div className="post-detail-details">
+                <h3>Room Details</h3>
+                <div className="details-grid">
+                  {post.sharingType && (
+                    <p>
+                      <strong>Sharing Type:</strong> {post.sharingType}
+                    </p>
+                  )}
+                  {post.roomType && (
+                    <p>
+                      <strong>Room Type:</strong> {post.roomType}
+                    </p>
+                  )}
+                  {post.currentOccupants && (
+                    <p>
+                      <strong>Current Occupants:</strong> {post.currentOccupants}
+                    </p>
+                  )}
+                  {post.totalCapacity && (
+                    <p>
+                      <strong>Total Capacity:</strong> {post.totalCapacity}
+                    </p>
+                  )}
+                  {post.amenities?.length > 0 && (
+                    <p>
+                      <strong>Amenities:</strong> {post.amenities.join(", ")}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {post.type === "partner-up" && (
+              <div className="post-detail-details">
+                <h3>Looking For</h3>
+                <div className="details-grid">
+                  {post.preferredLocation && (
+                    <p>
+                      <strong>Preferred Location:</strong>{" "}
+                      {post.preferredLocation}
+                    </p>
+                  )}
+                  {post.movingDateFrom && (
+                    <p>
+                      <strong>Moving From:</strong>{" "}
+                      {new Date(post.movingDateFrom).toLocaleDateString()}
+                    </p>
+                  )}
+                  {post.movingDateTo && (
+                    <p>
+                      <strong>Moving To:</strong>{" "}
+                      {new Date(post.movingDateTo).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="post-detail-description">
               <h3>Description</h3>
-              <p>{post.desc}</p>
+              <p>{post.description}</p>
             </div>
 
             {post.createdBy && (
               <div className="post-detail-author">
                 <div className="author-avatar">
-                  {post.createdBy.name.charAt(0).toUpperCase()}
+                  {post.createdBy.name?.charAt(0).toUpperCase() || "U"}
                 </div>
                 <div className="author-info">
                   <span className="author-name">{post.createdBy.name}</span>
@@ -274,7 +404,8 @@ function PostDetail() {
 
             <div className="post-detail-footer">
               <span className="post-date">
-                Posted on {new Date(post.createdAt).toLocaleDateString("en-US", {
+                Posted on{" "}
+                {new Date(post.createdAt).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "long",
                   day: "numeric",

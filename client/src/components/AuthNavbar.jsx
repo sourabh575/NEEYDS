@@ -10,6 +10,15 @@ function AuthNavbar() {
           <span className="auth-nav-tagline">Find your perfect roommate</span>
         </Link>
 
+        <div className="auth-nav-links auth-nav-links-primary">
+          <a href="/#features" className="auth-nav-link">
+            Features
+          </a>
+          <a href="/#about" className="auth-nav-link">
+            About
+          </a>
+        </div>
+
         <div className="auth-nav-links">
           <Link to="/login" className="auth-nav-link">
             Sign In

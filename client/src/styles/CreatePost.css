@@ -4,16 +4,17 @@
   align-items: flex-start;
   justify-content: center;
   padding: 2.5rem 1rem 3rem;
+  background: #f4f6fb;
 }
 
 .create-card {
   width: 100%;
   max-width: 720px;
-  background: rgba(255, 255, 255, 0.95);
+  background: #ffffff;
   border-radius: 1.25rem;
   padding: 1.75rem 1.75rem 2rem;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .create-header h3 {
@@ -121,9 +122,76 @@
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-.create-submit:hover {
+.create-submit:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 18px 40px rgba(37, 99, 235, 0.5);
+}
+
+.create-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Type Toggle Buttons */
+.type-btn {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  border: 2px solid #cbd5e1;
+  background: #f8fafc;
+  color: #64748b;
+  border-radius: 0.9rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.type-btn:hover {
+  border-color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.type-btn.active {
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  color: #f9fafb;
+  border-color: #2563eb;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+/* Amenities Grid */
+.amenities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.amenity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.amenity input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+.amenity:hover {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: #2563eb;
+  color: #2563eb;
 }
 
 @media (max-width: 768px) {
@@ -133,6 +201,10 @@
 
   .create-row-two {
     flex-direction: column;
+  }
+
+  .amenities-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   }
 }
 

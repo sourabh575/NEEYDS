@@ -50,6 +50,10 @@
   align-items: center;
 }
 
+.auth-nav-links-primary {
+  margin-left: auto;
+}
+
 .auth-nav-link {
   padding: 0.5rem 1rem;
   border-radius: 8px;
@@ -85,6 +89,10 @@
 @media (max-width: 640px) {
   .auth-nav-container {
     padding: 0.875rem 1.25rem;
+  }
+
+  .auth-nav-links-primary {
+    display: none;
   }
 
   .auth-nav-tagline {

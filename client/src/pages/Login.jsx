@@ -1,21 +1,20 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
-
 import API from "../api/axios";
 import { setAuth } from "../utils/auth";
 import AuthNavbar from "../components/AuthNavbar";
-import "../styles/Login.css";
+import "../styles/Auth.css";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
+  const location = useLocation();
+  const authPrompt = location.state?.authPrompt;
 
-  // 🔐 Normal login
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -49,7 +48,6 @@ function Login() {
     }
   };
 
-  // 🔥 Google login
   const handleGoogleLogin = async (credentialResponse) => {
     try {
       const res = await API.post("/users/google-login", {
@@ -75,23 +73,22 @@ function Login() {
   return (
     <>
       <AuthNavbar />
-
-      <div className="login-container">
-        <div className="login-card">
-          <div className="login-header">
-            <h2>Welcome Back</h2>
-            <p>Sign in to continue to your account</p>
+      <div className="auth-page-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <h1 className="auth-title">Welcome Back</h1>
+            <p className="auth-subtitle">Sign in to your account</p>
           </div>
 
-          {error && <div className="error-message">{error}</div>}
+          {authPrompt && <div className="auth-info-message">{authPrompt}</div>}
+          {error && <div className="auth-error-message">{error}</div>}
 
-          {/* Normal Login Form */}
-          <form className="login-form" onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Email Address</label>
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <div className="auth-form-group">
+              <label className="auth-label">Email Address</label>
               <input
                 type="email"
-                className="form-input"
+                className="auth-input"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -100,11 +97,11 @@ function Login() {
               />
             </div>
 
-            <div className="form-group">
-              <label>Password</label>
+            <div className="auth-form-group">
+              <label className="auth-label">Password</label>
               <input
                 type="password"
-                className="form-input"
+                className="auth-input"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -113,18 +110,16 @@ function Login() {
               />
             </div>
 
-            <button className="login-button" type="submit" disabled={loading}>
+            <button className="auth-button-primary" type="submit" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
-          {/* Divider */}
-          <div style={{ margin: "20px 0", textAlign: "center" }}>
-            <p>OR</p>
+          <div className="auth-divider">
+            <span>Or continue with</span>
           </div>
 
-          {/* Google Login Button */}
-          <div style={{ display: "flex", justifyContent: "center" }}>
+          <div className="auth-provider-wrapper">
             <GoogleLogin
               onSuccess={handleGoogleLogin}
               onError={() => {
@@ -134,9 +129,11 @@ function Login() {
             />
           </div>
 
-          <div className="login-footer">
-            Don’t have an account?{" "}
-            <Link to="/register">Create an account</Link>
+          <div className="auth-footer">
+            Don't have an account?{" "}
+            <Link to="/register" className="auth-link">
+              Sign up here
+            </Link>
           </div>
         </div>
       </div>

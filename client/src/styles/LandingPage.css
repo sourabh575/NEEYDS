@@ -1,0 +1,420 @@
+.landing-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 26%),
+    linear-gradient(180deg, #f8fbff 0%, #eef4f8 48%, #f7fafc 100%);
+}
+
+.landing-main {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.landing-hero {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 2rem;
+  align-items: center;
+  padding: 3rem 0 4rem;
+}
+
+.landing-kicker,
+.landing-section-heading span,
+.feature-eyebrow,
+.preview-type,
+.hero-mini-label {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.38rem 0.72rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  color: #0f5fa8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.landing-hero-copy h1,
+.landing-section-heading h2,
+.landing-cta-card h2 {
+  margin: 1rem 0 0;
+  font-family: "Poppins", "Segoe UI", sans-serif;
+  letter-spacing: -0.04em;
+  color: #0f172a;
+}
+
+.landing-hero-copy h1 {
+  font-size: clamp(2.8rem, 6vw, 4.8rem);
+  line-height: 0.96;
+  max-width: 11ch;
+}
+
+.landing-hero-copy p,
+.landing-section-heading p,
+.landing-feature-card p,
+.landing-step-card p,
+.preview-card p,
+.hero-dashboard-card p,
+.landing-footer span {
+  color: #475569;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.landing-hero-copy p {
+  margin: 1.25rem 0 0;
+  max-width: 56ch;
+}
+
+.landing-hero-actions,
+.landing-footer-links,
+.hero-card-tags,
+.preview-meta,
+.landing-proof-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+
+.landing-hero-actions {
+  margin-top: 1.75rem;
+}
+
+.landing-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.2rem;
+  padding: 0.85rem 1.4rem;
+  border-radius: 1rem;
+  font-weight: 700;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+}
+
+.landing-button:hover {
+  text-decoration: none;
+  transform: translateY(-2px);
+}
+
+.landing-button-primary {
+  color: #ffffff;
+  background: linear-gradient(135deg, #1d4ed8 0%, #0ea5e9 100%);
+  box-shadow: 0 18px 35px rgba(29, 78, 216, 0.24);
+}
+
+.landing-button-secondary {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+}
+
+.landing-proof-strip {
+  margin-top: 2rem;
+}
+
+.landing-proof-strip div {
+  min-width: 140px;
+  padding: 1rem 1.1rem;
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+}
+
+.landing-proof-strip strong,
+.hero-price-row strong,
+.hero-card-score {
+  display: block;
+  color: #0f172a;
+  font-size: 1.2rem;
+}
+
+.landing-proof-strip span,
+.hero-price-row span,
+.hero-card-header span {
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.landing-hero-visual {
+  position: relative;
+  min-height: 520px;
+}
+
+.hero-dashboard-card,
+.landing-feature-card,
+.landing-step-card,
+.landing-trust-card,
+.preview-card,
+.landing-cta-card {
+  border-radius: 1.6rem;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+}
+
+.hero-dashboard-card {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+}
+
+.hero-dashboard-primary {
+  top: 1rem;
+  left: 0;
+  width: min(100%, 430px);
+  padding: 1.4rem;
+}
+
+.hero-dashboard-secondary {
+  right: 0;
+  bottom: 3rem;
+  width: min(100%, 320px);
+  padding: 1.2rem;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+}
+
+.hero-dashboard-secondary h4,
+.hero-dashboard-secondary p,
+.hero-dashboard-secondary .hero-mini-label,
+.hero-dashboard-secondary .hero-price-row strong,
+.hero-dashboard-secondary .hero-price-row span {
+  color: #f8fafc;
+}
+
+.hero-card-header,
+.hero-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.hero-card-pill {
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.hero-dashboard-card h3,
+.hero-dashboard-card h4,
+.landing-feature-card h3,
+.landing-step-card h3,
+.landing-trust-card h3,
+.preview-card h3 {
+  margin: 0.9rem 0 0;
+  color: #0f172a;
+  font-size: 1.2rem;
+}
+
+.hero-dashboard-card p {
+  margin: 0.8rem 0 0;
+}
+
+.hero-card-tags span,
+.preview-meta span {
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.hero-floating-stat {
+  position: absolute;
+  left: 2rem;
+  bottom: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem 1.15rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
+}
+
+.hero-floating-stat span {
+  color: #0369a1;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.hero-floating-stat strong {
+  color: #0f172a;
+}
+
+.landing-section {
+  padding: 2rem 0;
+}
+
+.landing-section-heading {
+  max-width: 720px;
+  margin-bottom: 1.5rem;
+}
+
+.landing-section-heading h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+}
+
+.landing-feature-grid,
+.landing-steps-grid,
+.landing-trust-grid,
+.landing-preview-grid {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.landing-feature-grid,
+.landing-steps-grid,
+.landing-trust-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.landing-preview-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.landing-feature-card,
+.landing-step-card,
+.landing-trust-card,
+.preview-card {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.feature-icon,
+.trust-mark,
+.step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.9rem;
+  background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+.feature-eyebrow {
+  margin-top: 1rem;
+}
+
+.landing-steps-section,
+.landing-preview-section,
+.landing-cta-section {
+  padding-top: 3rem;
+}
+
+.landing-why-section .landing-trust-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.landing-about-section .landing-section-heading p {
+  margin-top: 1rem;
+}
+
+.preview-card-room {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.preview-card-flat {
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.landing-cta-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+}
+
+.landing-cta-card h2,
+.landing-cta-card .landing-kicker {
+  color: #f8fafc;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.landing-footer {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 0 0 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #475569;
+}
+
+.landing-footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.landing-footer-links a {
+  font-weight: 600;
+}
+
+@media (max-width: 1024px) {
+  .landing-hero,
+  .landing-preview-grid,
+  .landing-feature-grid,
+  .landing-steps-grid,
+  .landing-trust-grid,
+  .landing-why-section .landing-trust-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-hero-visual {
+    min-height: 460px;
+  }
+
+  .landing-cta-card,
+  .landing-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .landing-main {
+    width: min(100% - 1.25rem, 1180px);
+    padding-top: 1rem;
+  }
+
+  .landing-hero {
+    padding-top: 2rem;
+  }
+
+  .landing-hero-copy h1 {
+    max-width: none;
+  }
+
+  .landing-hero-visual {
+    min-height: auto;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .hero-dashboard-card,
+  .hero-floating-stat {
+    position: static;
+    width: 100%;
+  }
+
+  .landing-proof-strip div {
+    flex: 1 1 140px;
+  }
+}
