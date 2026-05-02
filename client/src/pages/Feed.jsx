@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import ImageGallery from "../components/ImageGallery";
 import { normalizePhotoList, normalizeImageUrl } from "../utils/imageUrls";
+import { ensureMobileNumber } from "../utils/phoneRequirement";
 import "../styles/Feed.css";
 
 function Feed() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
+  const [requestMap, setRequestMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     type: "",
@@ -35,8 +37,19 @@ function Feed() {
       if (filters.budget) params.append("budget", filters.budget);
       if (filters.location) params.append("location", filters.location);
 
-      const res = await API.get(`/posts?${params.toString()}`);
-      setPosts(res.data);
+      const [postsRes, sentRes] = await Promise.all([
+        API.get(`/posts?${params.toString()}`),
+        API.get("/contact-request/sent").catch(() => ({ data: [] })),
+      ]);
+
+      const requestsByPost = {};
+      sentRes.data.forEach((request) => {
+        const postId = request.postId?._id || request.postId;
+        if (postId) requestsByPost[postId] = request;
+      });
+
+      setPosts(postsRes.data);
+      setRequestMap(requestsByPost);
     } catch (error) {
       console.error("Error fetching posts:", error.message);
     } finally {
@@ -69,6 +82,68 @@ function Feed() {
 
   const openPost = (postId) => {
     navigate(`/post/${postId}`);
+  };
+
+  const handleInterest = async (event, post) => {
+    event.stopPropagation();
+
+    try {
+      const hasMobileNumber = await ensureMobileNumber(navigate);
+      if (!hasMobileNumber) return;
+
+      const res = await API.post("/contact-request/send", {
+        receiverId: post.createdBy?._id || post.createdBy,
+        postId: post._id,
+      });
+
+      setRequestMap((current) => ({
+        ...current,
+        [post._id]: res.data,
+      }));
+      alert("Request sent");
+    } catch (error) {
+      alert(error.response?.data?.message || "Could not send request");
+    }
+  };
+
+  const getContactAction = (post) => {
+    const isOwner = user?._id && (post.createdBy?._id || post.createdBy) === user._id;
+    if (isOwner) {
+      return {
+        label: "Manage Post",
+        disabled: false,
+        onClick: (event) => {
+          event.stopPropagation();
+          openPost(post._id);
+        },
+      };
+    }
+
+    const request = requestMap[post._id];
+    if (!request) {
+      return {
+        label: "Interested",
+        disabled: false,
+        onClick: (event) => handleInterest(event, post),
+      };
+    }
+
+    if (request.status === "accepted") {
+      return {
+        label: "View Contact",
+        disabled: false,
+        onClick: (event) => {
+          event.stopPropagation();
+          openPost(post._id);
+        },
+      };
+    }
+
+    return {
+      label: request.status === "rejected" ? "Rejected" : "Requested",
+      disabled: true,
+      onClick: (event) => event.stopPropagation(),
+    };
   };
 
   if (loading) {
@@ -290,17 +365,20 @@ function Feed() {
                       )}
                     </div>
 
-                    <div className="card-actions card-actions-single">
-                      <button
-                        type="button"
-                        className="card-action card-action-primary"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          openPost(post._id);
-                        }}
-                      >
-                        View Profile
-                      </button>
+                  <div className="card-actions card-actions-single">
+                      {(() => {
+                        const action = getContactAction(post);
+                        return (
+                          <button
+                            type="button"
+                            className="card-action card-action-primary"
+                            onClick={action.onClick}
+                            disabled={action.disabled}
+                          >
+                            {action.label}
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
                 </>
@@ -382,16 +460,19 @@ function Feed() {
                     </div>
 
                     <div className="card-actions card-actions-single">
-                      <button
-                        type="button"
-                        className="card-action card-action-primary"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          openPost(post._id);
-                        }}
-                      >
-                        View Profile
-                      </button>
+                      {(() => {
+                        const action = getContactAction(post);
+                        return (
+                          <button
+                            type="button"
+                            className="card-action card-action-primary"
+                            onClick={action.onClick}
+                            disabled={action.disabled}
+                          >
+                            {action.label}
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>

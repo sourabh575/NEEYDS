@@ -25,6 +25,11 @@ const userSchema = new mongoose.Schema(
       required: false,
     },
 
+    phone: {
+      type: String,
+      trim: true,
+    },
+
     googleId: {
       type: String,
     },

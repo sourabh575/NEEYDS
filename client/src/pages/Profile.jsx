@@ -190,6 +190,19 @@ function Profile() {
             />
           </div>
 
+          <div className="profile-form-group">
+            <label className="profile-form-label" htmlFor="phone">Phone Number</label>
+            <input
+              id="phone"
+              type="tel"
+              className="profile-form-input"
+              placeholder="Enter your contact number"
+              value={user?.phone || ""}
+              onChange={(e) => setUser({ ...user, phone: e.target.value })}
+              required
+            />
+          </div>
+
           {/* Buttons */}
           <div className="profile-buttons">
             <button className="profile-button" type="submit">

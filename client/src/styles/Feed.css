@@ -490,6 +490,14 @@
   box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18);
 }
 
+.card-action:disabled {
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  background: #e2e8f0;
+  color: #64748b;
+}
+
 .partner-card-shell {
   display: flex;
   flex: 1;

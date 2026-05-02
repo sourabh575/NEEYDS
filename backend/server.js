@@ -6,6 +6,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import userRoutes from "./routes/user.routes.js";
 import postRoutes from "./routes/post.routes.js";
+import contactRequestRoutes from "./routes/contactRequest.routes.js";
 
 if (!process.env.JWT_SECRET) {
   console.error("❌ JWT_SECRET missing");
@@ -53,6 +54,7 @@ connectDB();
 
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/contact-request", contactRequestRoutes);
 
 app.get("/", (req, res) => {
   res.send("🚀 API running");

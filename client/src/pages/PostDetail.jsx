@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import ImageGallery from "../components/ImageGallery";
 import { normalizeImageUrl, normalizePhotoList } from "../utils/imageUrls";
+import { ensureMobileNumber } from "../utils/phoneRequirement";
 import "../styles/PostDetail.css";
 
 function PostDetail() {
@@ -11,6 +12,8 @@ function PostDetail() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [contactRequest, setContactRequest] = useState(null);
+  const [contactMessage, setContactMessage] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
 
@@ -23,22 +26,30 @@ function PostDetail() {
     }
   })();
 
-  useEffect(() => {
-    fetchPost();
-  }, [id]);
-
-  const fetchPost = async () => {
+  const fetchPost = useCallback(async () => {
     try {
-      const res = await API.get(`/posts/${id}`);
-      setPost(res.data);
-      setEditForm(res.data);
+      const [postRes, sentRes] = await Promise.all([
+        API.get(`/posts/${id}`),
+        API.get("/contact-request/sent").catch(() => ({ data: [] })),
+      ]);
+      const requestForPost = sentRes.data.find(
+        (request) => (request.postId?._id || request.postId) === id
+      );
+
+      setPost(postRes.data);
+      setEditForm(postRes.data);
+      setContactRequest(requestForPost || null);
     } catch (error) {
       console.error("Error fetching post:", error);
       setError("Post not found");
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchPost();
+  }, [fetchPost]);
 
   const startEditing = () => {
     setIsEditing(true);
@@ -77,7 +88,27 @@ function PostDetail() {
     }
   };
 
+  const sendContactRequest = async () => {
+    if (!post?.createdBy?._id) return;
+
+    try {
+      setContactMessage("");
+      const hasMobileNumber = await ensureMobileNumber(navigate);
+      if (!hasMobileNumber) return;
+
+      const res = await API.post("/contact-request/send", {
+        receiverId: post.createdBy._id,
+        postId: post._id,
+      });
+      setContactRequest(res.data);
+      setContactMessage("Request sent");
+    } catch (error) {
+      setContactMessage(error.response?.data?.message || "Could not send request");
+    }
+  };
+
   const isOwner = token && user && post?.createdBy?._id === user._id;
+  const isAccepted = contactRequest?.status === "accepted";
 
   if (loading) {
     return (
@@ -399,6 +430,75 @@ function PostDetail() {
                   <span className="author-name">{post.createdBy.name}</span>
                   <span className="author-email">{post.createdBy.email}</span>
                 </div>
+              </div>
+            )}
+
+            {isOwner ? (
+              <div className="contact-panel">
+                <div>
+                  <h3>Contact Requests</h3>
+                  <p>Review interested users and approve contact sharing.</p>
+                </div>
+                <button
+                  type="button"
+                  className="contact-action-button"
+                  onClick={() => navigate("/contact-requests")}
+                >
+                  Manage Requests
+                </button>
+              </div>
+            ) : (
+              <div className="contact-panel">
+                <div>
+                  <h3>Contact Sharing</h3>
+                  {isAccepted ? (
+                    <div className="contact-info-grid">
+                      <div>
+                        <span className="contact-info-label">Owner phone</span>
+                        <strong>{contactRequest.receiverId?.phone || "Not provided"}</strong>
+                      </div>
+                      <div>
+                        <span className="contact-info-label">Your phone</span>
+                        <strong>{contactRequest.senderId?.phone || user?.phone || "Not provided"}</strong>
+                      </div>
+                    </div>
+                  ) : (
+                    <p>
+                      Request approval from the owner to exchange phone numbers.
+                    </p>
+                  )}
+                  {contactMessage && (
+                    <span className="contact-message">{contactMessage}</span>
+                  )}
+                </div>
+
+                {!contactRequest && (
+                  <button
+                    type="button"
+                    className="contact-action-button"
+                    onClick={sendContactRequest}
+                  >
+                    Interested
+                  </button>
+                )}
+
+                {contactRequest?.status === "pending" && (
+                  <button type="button" className="contact-action-button" disabled>
+                    Requested
+                  </button>
+                )}
+
+                {contactRequest?.status === "rejected" && (
+                  <button type="button" className="contact-action-button" disabled>
+                    Rejected
+                  </button>
+                )}
+
+                {isAccepted && (
+                  <button type="button" className="contact-action-button" disabled>
+                    Contact Shared
+                  </button>
+                )}
               </div>
             )}
 

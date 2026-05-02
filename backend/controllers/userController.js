@@ -9,7 +9,7 @@ const generateToken = (id) => {
 
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password, gender } = req.body;
+    const { name, email, password, gender, phone } = req.body;
 
     console.log("Registration attempt:", {
       name,
@@ -17,11 +17,12 @@ export const registerUser = async (req, res) => {
       gender: gender ? "provided" : "missing",
     });
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !phone?.trim()) {
       const missing = [];
       if (!name) missing.push("name");
       if (!email) missing.push("email");
       if (!password) missing.push("password");
+      if (!phone?.trim()) missing.push("phone");
 
       return res.status(400).json({
         message: `Please provide all required fields: ${missing.join(", ")}`,
@@ -43,6 +44,7 @@ export const registerUser = async (req, res) => {
       email,
       password,
       gender,
+      phone,
       isEmailVerified: true,
     });
 
@@ -53,6 +55,7 @@ export const registerUser = async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      phone: user.phone,
       token: generateToken(user._id),
     });
   } catch (error) {
@@ -114,6 +117,7 @@ export const loginUser = async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      phone: user.phone,
       token,
     });
   } catch (error) {
@@ -136,8 +140,9 @@ export const getUserProfile = async (req, res) => {
 
 export const getUserById = async (req, res) => {
   try {
+    const isOwnProfile = req.params.id === req.user._id.toString();
     const user = await User.findById(req.params.id).select(
-      "-password -emailVerifyToken -emailVerifyExpires"
+      `-password -emailVerifyToken -emailVerifyExpires${isOwnProfile ? "" : " -phone"}`
     );
 
     if (!user) {
@@ -152,7 +157,11 @@ export const getUserById = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
-    const { name, gender } = req.body;
+    const { name, gender, phone } = req.body;
+
+    if (req.params.id !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You can only update your own profile" });
+    }
 
     const user = await User.findById(req.params.id);
 
@@ -160,6 +169,10 @@ export const updateUser = async (req, res) => {
 
     if (name !== undefined) user.name = name;
     if (gender !== undefined) user.gender = gender;
+    if (phone !== undefined && !phone.trim()) {
+      return res.status(400).json({ message: "Mobile number is required" });
+    }
+    if (phone !== undefined) user.phone = phone;
 
     await user.save();
 

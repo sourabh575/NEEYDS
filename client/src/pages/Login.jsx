@@ -30,6 +30,7 @@ function Login() {
             _id: res.data._id,
             name: res.data.name,
             email: res.data.email,
+            phone: res.data.phone,
           },
         });
 
@@ -60,6 +61,7 @@ function Login() {
           _id: res.data._id,
           name: res.data.name,
           email: res.data.email,
+          phone: res.data.phone,
         },
       });
 

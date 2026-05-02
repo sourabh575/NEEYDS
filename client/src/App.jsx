@@ -6,6 +6,7 @@ import Profile from "./pages/Profile";
 import CreatePost from "./pages/CreatePost";
 import Feed from "./pages/Feed";
 import PostDetail from "./pages/PostDetail";
+import ContactRequests from "./pages/ContactRequests";
 import UserProfileDetail from "./pages/UserProfileDetail";
 import Navbar from "./components/Navbar";
 import Loginbygoogle from "./pages/Loginbygoogle";
@@ -113,6 +114,14 @@ function App() {
           element={
             <ProtectedRoute token={auth.token}>
               <UserProfileDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/contact-requests"
+          element={
+            <ProtectedRoute token={auth.token}>
+              <ContactRequests />
             </ProtectedRoute>
           }
         />

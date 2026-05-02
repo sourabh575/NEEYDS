@@ -12,6 +12,7 @@ const Register = () => {
     password: "",
     confirmPassword: "",
     gender: "",
+    phone: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -42,6 +43,7 @@ const Register = () => {
         email: formData.email,
         password: formData.password,
         gender: formData.gender,
+        phone: formData.phone,
       });
 
       if (res.status === 201 && res.data.token && res.data._id) {
@@ -51,6 +53,7 @@ const Register = () => {
             _id: res.data._id,
             name: res.data.name,
             email: res.data.email,
+            phone: res.data.phone,
           },
         });
 
@@ -164,6 +167,21 @@ const Register = () => {
                 <option value="Female">Female</option>
                 <option value="Other">Other</option>
               </select>
+            </div>
+
+            <div className="auth-form-group">
+              <label className="auth-label" htmlFor="phone">Phone Number</label>
+              <input
+                id="phone"
+                type="tel"
+                className="auth-input"
+                name="phone"
+                placeholder="Your contact number"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                disabled={loading}
+              />
             </div>
 
             <button className="auth-button-primary" type="submit" disabled={loading}>
