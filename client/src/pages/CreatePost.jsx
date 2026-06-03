@@ -6,13 +6,16 @@ import "../styles/CreatePost.css";
 function CreatePost() {
   const navigate = useNavigate();
 
-  const [type, setType] = useState("join-my-flat");
+  const [postType, setPostType] = useState(null); // null, "join-my-flat", or "partner-up"
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [descriptionLength, setDescriptionLength] = useState(0);
 
   const [form, setForm] = useState({
     profileImage: "",
+    profileImagePreview: "", // For display
     name: "",
     age: "",
     gender: "male",
@@ -22,6 +25,7 @@ function CreatePost() {
     occupationPreference: "any",
     description: "",
     roomPhotos: [],
+    roomPhotoPreviews: [], // For display
     sharingType: "single",
     roomType: "1BHK",
     currentOccupants: "",
@@ -42,8 +46,17 @@ function CreatePost() {
     if (!token) navigate("/login");
   }, [token, navigate]);
 
+  // Handle type selection
+  const handleTypeSelect = (type) => {
+    setPostType(type);
+    setError("");
+    setSuccess(false);
+  };
+
+  // Handle input changes
   const handleInput = (e) => {
     const { name, value, type: t, checked } = e.target;
+
     if (t === "checkbox" && name === "amenities") {
       setForm((s) => {
         const set = new Set(s.amenities);
@@ -53,10 +66,16 @@ function CreatePost() {
       });
       return;
     }
+
+    if (name === "description") {
+      setDescriptionLength(value.length);
+    }
+
     setForm((s) => ({ ...s, [name]: value }));
   };
 
-  const handleImagePaste = (e, fieldName) => {
+  // Handle image paste for profileImage
+  const handleProfileImagePaste = (e) => {
     const items = e.clipboardData?.items;
     if (!items) return;
 
@@ -66,56 +85,120 @@ function CreatePost() {
         const reader = new FileReader();
         reader.onload = (event) => {
           const base64Image = event.target.result;
-          if (fieldName === "profileImage") {
-            setForm((s) => ({ ...s, profileImage: base64Image }));
-          } else if (fieldName === "roomPhotos") {
-            setForm((s) => ({
-              ...s,
-              roomPhotos: [...s.roomPhotos, base64Image],
-            }));
-            e.preventDefault();
-          }
+          setForm((s) => ({
+            ...s,
+            profileImage: base64Image,
+            profileImagePreview: base64Image,
+          }));
         };
         reader.readAsDataURL(file);
+        e.preventDefault();
         break;
       }
     }
   };
 
+  // Handle image paste for roomPhotos
+  const handleRoomPhotosPaste = (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let item of items) {
+      if (item.type.indexOf("image") !== -1) {
+        const file = item.getAsFile();
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const base64Image = event.target.result;
+          setForm((s) => ({
+            ...s,
+            roomPhotos: [...s.roomPhotos, base64Image],
+            roomPhotoPreviews: [...s.roomPhotoPreviews, base64Image],
+          }));
+        };
+        reader.readAsDataURL(file);
+        e.preventDefault();
+        break;
+      }
+    }
+  };
+
+  // Remove room photo
+  const removeRoomPhoto = (index) => {
+    setForm((s) => ({
+      ...s,
+      roomPhotos: s.roomPhotos.filter((_, i) => i !== index),
+      roomPhotoPreviews: s.roomPhotoPreviews.filter((_, i) => i !== index),
+    }));
+  };
+
+  // Remove profile image
+  const removeProfileImage = () => {
+    setForm((s) => ({
+      ...s,
+      profileImage: "",
+      profileImagePreview: "",
+    }));
+  };
+
+  // Validate required fields
+  const validateFields = () => {
+    const required = {
+      common: ["profileImage", "name", "age", "location", "description"],
+      joinMyFlat: ["roomPhotos", "sharingType", "roomType", "rentPerPerson"],
+      partnerUp: ["preferredLocation", "movingDateFrom", "budget"],
+    };
+
+    const missing = [];
+
+    // Check common fields
+    required.common.forEach((field) => {
+      if (!form[field] || (Array.isArray(form[field]) && form[field].length === 0)) {
+        missing.push(field);
+      }
+    });
+
+    // Check type-specific fields
+    if (postType === "join-my-flat") {
+      required.joinMyFlat.forEach((field) => {
+        if (!form[field] || (Array.isArray(form[field]) && form[field].length === 0)) {
+          missing.push(field);
+        }
+      });
+    }
+
+    if (postType === "partner-up") {
+      required.partnerUp.forEach((field) => {
+        if (!form[field]) {
+          missing.push(field);
+        }
+      });
+    }
+
+    return missing;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setMsg("");
+    setSuccess(false);
 
-    if (!form.profileImage.trim()) return setError("Profile image URL is required");
-    if (!form.name || !form.age || !form.location || !form.description)
-      return setError("Please fill required fields");
-
-    if (type === "join-my-flat") {
-      if (!form.rentPerPerson) return setError("Rent per person is required for Join My Flat");
-      const urls = form.roomPhotos.map((u) => (typeof u === "string" ? u.trim() : "")).filter(Boolean);
-      if (urls.length === 0) return setError("Add at least one room photo URL for Join My Flat");
-    }
-
-    if (type === "partner-up") {
-      if (!form.budget || !form.movingDateFrom)
-        return setError("Budget and moving date are required for Partner Up");
+    const missing = validateFields();
+    if (missing.length > 0) {
+      return setError(`Missing fields: ${missing.join(", ")}`);
     }
 
     setLoading(true);
+
     try {
       const payload = { ...form };
-      payload.type = type;
+      payload.type = postType;
 
-      if (type !== "join-my-flat") {
+      if (postType !== "join-my-flat") {
         delete payload.roomPhotos;
       } else {
         // Support newline/comma-separated URLs to avoid broken image parsing
         payload.roomPhotos = form.roomPhotos.filter(url => url.trim());
       }
-
-      // Support newline/comma-separated URLs to avoid broken image parsing
-      payload.roomPhotos = form.roomPhotos.filter(url => url.trim());
 
       if (payload.age) payload.age = Number(payload.age);
       if (payload.rentPerPerson) payload.rentPerPerson = Number(payload.rentPerPerson);
@@ -151,23 +234,23 @@ function CreatePost() {
           <div className="create-row create-row-two">
             <button
               type="button"
-              className={type === "join-my-flat" ? "type-btn active" : "type-btn"}
-              onClick={(e) => { e.preventDefault(); setType("join-my-flat"); }}
+              className={postType === "join-my-flat" ? "type-btn active" : "type-btn"}
+              onClick={(e) => { e.preventDefault(); setPostType("join-my-flat"); }}
             >
               🏠 Join My Flat
             </button>
             <button
               type="button"
-              className={type === "partner-up" ? "type-btn active" : "type-btn"}
-              onClick={(e) => { e.preventDefault(); setType("partner-up"); }}
+              className={postType === "partner-up" ? "type-btn active" : "type-btn"}
+              onClick={(e) => { e.preventDefault(); setPostType("partner-up"); }}
             >
               🔍 Need a Room
             </button>
           </div>
 
-          <div className="create-row" style={{ background: type === "join-my-flat" ? "#e8f5e9" : "#e3f2fd", padding: "15px", borderRadius: "8px", marginBottom: "20px" }}>
+          <div className="create-row" style={{ background: postType === "join-my-flat" ? "#e8f5e9" : "#e3f2fd", padding: "15px", borderRadius: "8px", marginBottom: "20px" }}>
             <p style={{ margin: "0", fontSize: "14px" }}>
-              {type === "join-my-flat"
+              {postType === "join-my-flat"
                 ? "You have a room available. Share room details and photos to find compatible roommates."
                 : "You need a room. Share your preferences and profile to find available rooms."}
             </p>
@@ -237,7 +320,7 @@ function CreatePost() {
           </div>
 
           {/* Room Photo Upload - Only for Join My Flat */}
-          {type === "join-my-flat" && (
+          {postType === "join-my-flat" && (
             <div className="create-row">
               <div className="create-field">
                 <label>Room Photo URLs (required) - one per line or comma separated - Paste images from Chrome</label>
@@ -296,7 +379,7 @@ function CreatePost() {
           </div>
           )}
 
-          {type === "join-my-flat" && (
+          {postType === "join-my-flat" && (
             <>
               <div className="create-row create-row-two">
               <div className="create-field">
@@ -393,7 +476,7 @@ function CreatePost() {
           </>
           )}
 
-          {type === "partner-up" && (
+          {postType === "partner-up" && (
             <>
               <div className="create-row create-row-two">
                 <div className="create-field">

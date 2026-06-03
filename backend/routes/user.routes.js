@@ -8,7 +8,7 @@ import {
 } from "../controllers/userController.js";
 import protect from "../middleware/authMiddleware.js";
 import { googleLogin } from "../controllers/googleLogin.js";
-
+ 
 const router = express.Router();
 
 // Public routes
