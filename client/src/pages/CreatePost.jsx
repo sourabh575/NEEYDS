@@ -16,9 +16,9 @@ function CreatePost() {
   const [form, setForm] = useState({
     profileImage: "",
     profileImagePreview: "", // For display
-    name: "",
+    name: "", 
     age: "",
-    gender: "male",
+    gender: "male", 
     occupation: "working",
     location: "",
     genderPreference: "any",

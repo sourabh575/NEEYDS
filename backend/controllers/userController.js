@@ -82,7 +82,7 @@ export const registerUser = async (req, res) => {
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
-};
+}; 
 
 export const loginUser = async (req, res) => {
   try {
