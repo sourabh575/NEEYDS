@@ -163,7 +163,7 @@ function CreatePost() {
         if (!form[field] || (Array.isArray(form[field]) && form[field].length === 0)) {
           missing.push(field);
         }
-      });
+      }); 
     }
 
     if (postType === "partner-up") {

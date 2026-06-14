@@ -99,7 +99,7 @@ export const createPost = async (req, res) => {
       if (missing.length) {
         return res.status(400).json({ message: `Missing join-my-flat fields: ${missing.join(", ")}` });
       }
-    }
+    } 
 
     if (data.type === "partner-up") {
       const missing = ensureFields(data, ["preferredLocation", "movingDateFrom", "budget"]);

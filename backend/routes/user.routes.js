@@ -22,3 +22,4 @@ router.put("/:id", protect, updateUser);
 router.post("/google-login", googleLogin);
 
 export default router;
+ 
