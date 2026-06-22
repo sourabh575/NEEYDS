@@ -5,8 +5,10 @@ const normalizeImageUrl = (url) => {
   let u = url.trim();
   if (!u) return "";
 
+  if (/^data:image\//i.test(u)) return u;
+
   // People often copy a link with trailing punctuation (e.g. ")" or ",")
-  u = u.replace(/^["'(<\[]+/, "").replace(/["')>\\\],.]+$/, "");
+  u = u.replace(/^["'(<[]+/, "").replace(/["')>\\\],.]+$/, "");
 
   if (u.startsWith("//")) u = `https:${u}`;
 

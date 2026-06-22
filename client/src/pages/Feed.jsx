@@ -1,14 +1,14 @@
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
-import ImageGallery from "../components/ImageGallery";
-import { normalizePhotoList, normalizeImageUrl } from "../utils/imageUrls";
+import PostCard from "../components/PostCard";
 import { ensureMobileNumber } from "../utils/phoneRequirement";
 import "../styles/Feed.css";
 
 function Feed() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
   const [requestMap, setRequestMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -33,7 +33,9 @@ function Feed() {
       setLoading(true);
       const params = new URLSearchParams();
       if (filters.type) params.append("type", filters.type);
-      if (filters.genderPreference) params.append("genderPreference", filters.genderPreference);
+      if (filters.genderPreference) {
+        params.append("genderPreference", filters.genderPreference);
+      }
       if (filters.budget) params.append("budget", filters.budget);
       if (filters.location) params.append("location", filters.location);
 
@@ -57,12 +59,24 @@ function Feed() {
     }
   }, [filters]);
 
+  const fetchWishlist = useCallback(async () => {
+    try {
+      const res = await API.get("/wishlist");
+      const savedPosts = res.data?.wishlist || res.data?.posts || [];
+      setWishlist(savedPosts.map((post) => post._id || post));
+    } catch (error) {
+      console.error("Error fetching wishlist:", error.message);
+      setWishlist([]);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPosts();
-  }, [fetchPosts]);
+    fetchWishlist();
+  }, [fetchPosts, fetchWishlist]);
 
   const handleFilterChange = (key, value) => {
-    setFilters({ ...filters, [key]: value });
+    setFilters((current) => ({ ...current, [key]: value }));
   };
 
   const clearFilters = () => {
@@ -76,9 +90,6 @@ function Feed() {
 
   const hasActiveFilters = () =>
     filters.type || filters.genderPreference || filters.budget || filters.location;
-
-  const getPostImages = (post) =>
-    post?.type === "join-my-flat" ? normalizePhotoList(post.roomPhotos) : [];
 
   const openPost = (postId) => {
     navigate(`/post/${postId}`);
@@ -144,6 +155,29 @@ function Feed() {
       disabled: true,
       onClick: (event) => event.stopPropagation(),
     };
+  };
+
+  const handleWishlist = async (postId) => {
+    const wasSaved = wishlist.includes(postId);
+
+    setWishlist((current) =>
+      wasSaved ? current.filter((id) => id !== postId) : [...current, postId]
+    );
+
+    try {
+      const res = await API.post(`/wishlist/toggle/${postId}`);
+      setWishlist((current) => {
+        const withoutPost = current.filter((id) => id !== postId);
+        return res.data.saved ? [...withoutPost, postId] : withoutPost;
+      });
+    } catch (error) {
+      setWishlist((current) =>
+        wasSaved
+          ? [...current.filter((id) => id !== postId), postId]
+          : current.filter((id) => id !== postId)
+      );
+      alert(error.response?.data?.message || "Could not update wishlist");
+    }
   };
 
   if (loading) {
@@ -233,7 +267,9 @@ function Feed() {
                   <select
                     id="gender-filter"
                     value={filters.genderPreference}
-                    onChange={(event) => handleFilterChange("genderPreference", event.target.value)}
+                    onChange={(event) =>
+                      handleFilterChange("genderPreference", event.target.value)
+                    }
                   >
                     <option value="">Any Gender</option>
                     <option value="male">Male</option>
@@ -268,16 +304,14 @@ function Feed() {
           )}
         </div>
 
-        {!loading && (
-          <div className="feed-results-info">
-            <span className="results-count">
-              {posts.length} {posts.length === 1 ? "listing" : "listings"} found
-              {hasActiveFilters() && " with active filters"}
-            </span>
-          </div>
-        )}
+        <div className="feed-results-info">
+          <span className="results-count">
+            {posts.length} {posts.length === 1 ? "listing" : "listings"} found
+            {hasActiveFilters() && " with active filters"}
+          </span>
+        </div>
 
-        {posts.length === 0 && !loading && (
+        {posts.length === 0 && (
           <div className="feed-empty-state">
             <h3>No listings found</h3>
             <p>
@@ -298,186 +332,14 @@ function Feed() {
 
         <div className="feed-grid">
           {posts.map((post) => (
-            <article
+            <PostCard
               key={post._id}
-              className={`feed-card feed-card-${post.type}`}
-              onClick={() => openPost(post._id)}
-            >
-              {post.type === "join-my-flat" && (
-                <>
-                  <div className="card-image card-image-join">
-                    <ImageGallery
-                      images={getPostImages(post)}
-                      title={post.name || "Listing"}
-                      roomType={post.roomType}
-                      placeholderText="No room photos"
-                      compact
-                    />
-                    <div className="card-media-overlay">
-                      <span className="media-badge media-badge-price">
-                        {post.rentPerPerson
-                          ? `₹${Number(post.rentPerPerson).toLocaleString()}`
-                          : "Price on request"}
-                      </span>
-                      <span className="media-badge">Join My Flat</span>
-                    </div>
-                  </div>
-
-                  <div className="card-content join-flat-content">
-                    <div className="card-user-row">
-                      <div className="card-user-mini-avatar">
-                        {post.profileImage ? (
-                          <img src={normalizeImageUrl(post.profileImage)} alt={post.name} />
-                        ) : (
-                          <span className="avatar-initial">{(post.name || "U").charAt(0).toUpperCase()}</span>
-                        )}
-                      </div>
-                      <div className="card-user-mini-info">
-                        <span className="user-mini-name">{post.name || "User"}</span>
-                        <span className="user-mini-details">
-                          {post.age ? `${post.age} yrs` : "Age not shared"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="card-price-block">
-                      <div className="room-rent">
-                        <span className="rent-label">
-                          {post.rentPerPerson
-                            ? `₹${Number(post.rentPerPerson).toLocaleString()} / month`
-                            : "Price on request"}
-                        </span>
-                      </div>
-                      <div className="card-location">
-                        <span>{post.location || "Location TBD"}</span>
-                      </div>
-                    </div>
-
-                    <div className="tag-row">
-                      {post.roomType && (
-                        <span className="meta-tag">{post.roomType}</span>
-                      )}
-                      {post.sharingType && (
-                        <span className="meta-tag">{post.sharingType}</span>
-                      )}
-                      {post.amenities && post.amenities.length > 0 && (
-                        <span className="meta-tag">{post.amenities.length} Amenities</span>
-                      )}
-                    </div>
-
-                  <div className="card-actions card-actions-single">
-                      {(() => {
-                        const action = getContactAction(post);
-                        return (
-                          <button
-                            type="button"
-                            className="card-action card-action-primary"
-                            onClick={action.onClick}
-                            disabled={action.disabled}
-                          >
-                            {action.label}
-                          </button>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {post.type === "partner-up" && (
-                <div className="partner-card-shell">
-                  <div className="card-media-overlay card-media-overlay-static">
-                    <span className="media-badge media-badge-price">
-                      {post.budget ? `₹${Number(post.budget).toLocaleString()}` : "Flexible"}
-                    </span>
-                    <span className="media-badge">Need a Room</span>
-                  </div>
-                  <div className="partner-profile-section">
-                    <div className="partner-avatar-large">
-                      {post.profileImage ? (
-                        <img
-                          src={normalizeImageUrl(post.profileImage)}
-                          alt={post.name}
-                          className="partner-profile-image"
-                        />
-                      ) : (
-                        <div className="partner-avatar-placeholder">
-                          <span>{(post.name || "U").charAt(0).toUpperCase()}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="card-content partner-content">
-                    <div className="partner-heading">
-                      <h3 className="partner-name">{post.name || "User"}</h3>
-                      <div className="partner-bio">
-                        <span>{post.age ? `${post.age} yrs` : "Age not shared"}</span>
-                        <span>•</span>
-                        <span className="capitalize">{post.gender || "Any gender"}</span>
-                        <span>•</span>
-                        <span className="capitalize">{post.occupation || "Working"}</span>
-                      </div>
-                    </div>
-
-                    <div className="info-chip-grid">
-                      <div className="info-chip">
-                        <span className="info-chip-label">Budget</span>
-                        <span className="info-chip-value">
-                          {post.budget ? `₹${Number(post.budget).toLocaleString()}` : "Flexible"}
-                        </span>
-                      </div>
-                      <div className="info-chip">
-                        <span className="info-chip-label">Move-in</span>
-                        <span className="info-chip-value">
-                          {post.movingDateFrom
-                            ? new Date(post.movingDateFrom).toLocaleDateString()
-                            : "Flexible"}
-                        </span>
-                      </div>
-                      <div className="info-chip">
-                        <span className="info-chip-label">City</span>
-                        <span className="info-chip-value">
-                          {post.preferredLocation || post.location || "Open"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="tag-row">
-                      {post.genderPreference && (
-                        <span className="meta-tag capitalize">
-                          {post.genderPreference === "any" ? "Any Gender" : post.genderPreference}
-                        </span>
-                      )}
-                      {post.occupationPreference && (
-                        <span className="meta-tag capitalize">
-                          {post.occupationPreference === "any" ? "Any Profession" : post.occupationPreference}
-                        </span>
-                      )}
-                      <span className="meta-tag">Non-Smoker</span>
-                      <span className="meta-tag">Working</span>
-                      <span className="meta-tag">Clean</span>
-                    </div>
-
-                    <div className="card-actions card-actions-single">
-                      {(() => {
-                        const action = getContactAction(post);
-                        return (
-                          <button
-                            type="button"
-                            className="card-action card-action-primary"
-                            onClick={action.onClick}
-                            disabled={action.disabled}
-                          >
-                            {action.label}
-                          </button>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </article>
+              post={post}
+              isSaved={wishlist.includes(post._id)}
+              onOpen={openPost}
+              onWishlistToggle={handleWishlist}
+              contactAction={getContactAction(post)}
+            />
           ))}
         </div>
       </div>

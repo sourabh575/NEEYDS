@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import API from "../api/axios";
 import { useNavigate } from "react-router-dom";
+import { normalizeImageUrl, normalizePhotoList } from "../utils/imageUrls";
 import "../styles/CreatePost.css";
 
 function CreatePost() {
@@ -10,8 +11,6 @@ function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [descriptionLength, setDescriptionLength] = useState(0);
 
   const [form, setForm] = useState({
     profileImage: "",
@@ -50,7 +49,6 @@ function CreatePost() {
   const handleTypeSelect = (type) => {
     setPostType(type);
     setError("");
-    setSuccess(false);
   };
 
   // Handle input changes
@@ -67,77 +65,64 @@ function CreatePost() {
       return;
     }
 
-    if (name === "description") {
-      setDescriptionLength(value.length);
-    }
-
     setForm((s) => ({ ...s, [name]: value }));
   };
 
-  // Handle image paste for profileImage
-  const handleProfileImagePaste = (e) => {
+  const handleImagePaste = (e, fieldName) => {
     const items = e.clipboardData?.items;
-    if (!items) return;
+    const text = e.clipboardData?.getData("text")?.trim();
 
-    for (let item of items) {
-      if (item.type.indexOf("image") !== -1) {
+    if (items) {
+      for (const item of items) {
+        if (!item.type.includes("image")) continue;
         const file = item.getAsFile();
+        if (!file) continue;
+
         const reader = new FileReader();
         reader.onload = (event) => {
           const base64Image = event.target.result;
-          setForm((s) => ({
-            ...s,
-            profileImage: base64Image,
-            profileImagePreview: base64Image,
-          }));
+          setForm((s) => {
+            if (fieldName === "roomPhotos") {
+              return {
+                ...s,
+                roomPhotos: [...s.roomPhotos, base64Image],
+                roomPhotoPreviews: [...s.roomPhotoPreviews, base64Image],
+              };
+            }
+
+            return {
+              ...s,
+              profileImage: base64Image,
+              profileImagePreview: base64Image,
+            };
+          });
         };
         reader.readAsDataURL(file);
         e.preventDefault();
-        break;
+        return;
       }
     }
-  };
 
-  // Handle image paste for roomPhotos
-  const handleRoomPhotosPaste = (e) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
+    if (!text) return;
 
-    for (let item of items) {
-      if (item.type.indexOf("image") !== -1) {
-        const file = item.getAsFile();
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const base64Image = event.target.result;
-          setForm((s) => ({
-            ...s,
-            roomPhotos: [...s.roomPhotos, base64Image],
-            roomPhotoPreviews: [...s.roomPhotoPreviews, base64Image],
-          }));
-        };
-        reader.readAsDataURL(file);
-        e.preventDefault();
-        break;
-      }
+    if (fieldName === "roomPhotos") {
+      const pastedUrls = normalizePhotoList(text);
+      if (pastedUrls.length === 0) return;
+
+      setForm((s) => ({
+        ...s,
+        roomPhotos: Array.from(new Set([...s.roomPhotos, ...pastedUrls])),
+      }));
+      e.preventDefault();
+      return;
     }
-  };
 
-  // Remove room photo
-  const removeRoomPhoto = (index) => {
     setForm((s) => ({
       ...s,
-      roomPhotos: s.roomPhotos.filter((_, i) => i !== index),
-      roomPhotoPreviews: s.roomPhotoPreviews.filter((_, i) => i !== index),
+      profileImage: normalizeImageUrl(text),
+      profileImagePreview: normalizeImageUrl(text),
     }));
-  };
-
-  // Remove profile image
-  const removeProfileImage = () => {
-    setForm((s) => ({
-      ...s,
-      profileImage: "",
-      profileImagePreview: "",
-    }));
+    e.preventDefault();
   };
 
   // Validate required fields
@@ -180,8 +165,6 @@ function CreatePost() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess(false);
-
     const missing = validateFields();
     if (missing.length > 0) {
       return setError(`Missing fields: ${missing.join(", ")}`);
@@ -206,7 +189,7 @@ function CreatePost() {
       if (payload.currentOccupants) payload.currentOccupants = Number(payload.currentOccupants);
       if (payload.totalCapacity) payload.totalCapacity = Number(payload.totalCapacity);
 
-      const res = await API.post("/posts", payload, {
+      await API.post("/posts", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -232,17 +215,17 @@ function CreatePost() {
 
         <form className="create-form" onSubmit={handleSubmit}>
           <div className="create-row create-row-two">
-            <button
+              <button
               type="button"
               className={postType === "join-my-flat" ? "type-btn active" : "type-btn"}
-              onClick={(e) => { e.preventDefault(); setPostType("join-my-flat"); }}
+              onClick={(e) => { e.preventDefault(); handleTypeSelect("join-my-flat"); }}
             >
               🏠 Join My Flat
             </button>
             <button
               type="button"
               className={postType === "partner-up" ? "type-btn active" : "type-btn"}
-              onClick={(e) => { e.preventDefault(); setPostType("partner-up"); }}
+              onClick={(e) => { e.preventDefault(); handleTypeSelect("partner-up"); }}
             >
               🔍 Need a Room
             </button>

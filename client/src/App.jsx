@@ -11,6 +11,7 @@ import UserProfileDetail from "./pages/UserProfileDetail";
 import Navbar from "./components/Navbar";
 import Loginbygoogle from "./pages/Loginbygoogle";
 import LandingPage from "./pages/LandingPage";
+import Wishlist from "./pages/Wishlist";
 
 function ProtectedRoute({ children, token, redirectTo = "/login" }) {
   if (!token) {
@@ -125,9 +126,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/wishlist"
+          element={
+            <ProtectedRoute token={auth.token}>
+              <Wishlist />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="*" element={<Navigate to={isAuthed ? "/feed" : "/"} replace />} />
         <Route path="/google-login" element={<Loginbygoogle />} />
+        <Route path="*" element={<Navigate to={isAuthed ? "/feed" : "/"} replace />} />
       </Routes>
     </Router>
   );

@@ -44,6 +44,9 @@ function Navbar() {
           <Link className="nav-link" to="/profile">
             Profile
           </Link>
+          <Link className="nav-link" to="/wishlist">
+            ❤️ Wishlist
+          </Link>
           <Link className="nav-link nav-link-with-badge" to="/contact-requests">
             Requests
             {pendingCount > 0 && <span className="nav-badge">{pendingCount}</span>}
