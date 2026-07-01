@@ -1,5 +1,19 @@
 import mongoose from "mongoose";
 
+const imageSchema = new mongoose.Schema(
+  {
+    public_id: {
+      type: String,
+      required: true,
+    },
+    url: {
+      type: String,
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
 const postSchema = new mongoose.Schema(
   {
     /* ===========================
@@ -16,8 +30,14 @@ const postSchema = new mongoose.Schema(
     ============================ */
 
     profileImage: {
-      type: String, // Cloudinary URL
-      required: true,
+      public_id: {
+        type: String,
+        required: true,
+      },
+      url: {
+        type: String,
+        required: true,
+      },
     },
 
     name: {
@@ -80,6 +100,12 @@ const postSchema = new mongoose.Schema(
         type: String, // multiple image URLs
       },
     ],
+
+    // Cloudinary image metadata. roomPhotos remains for legacy records/clients.
+    images: {
+      type: [imageSchema],
+      default: undefined,
+    },
 
     sharingType: {
       type: String,

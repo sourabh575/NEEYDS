@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import API from "../api/axios";
 import { useNavigate } from "react-router-dom";
-import { normalizeImageUrl, normalizePhotoList } from "../utils/imageUrls";
 import "../styles/CreatePost.css";
+
+const MAX_IMAGES = 5;
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 function CreatePost() {
   const navigate = useNavigate();
@@ -11,10 +13,11 @@ function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [profileImage, setProfileImage] = useState(null);
+  const [roomImages, setRoomImages] = useState([]);
 
   const [form, setForm] = useState({
-    profileImage: "",
-    profileImagePreview: "", // For display
     name: "", 
     age: "",
     gender: "male", 
@@ -23,8 +26,6 @@ function CreatePost() {
     genderPreference: "any",
     occupationPreference: "any",
     description: "",
-    roomPhotos: [],
-    roomPhotoPreviews: [], // For display
     sharingType: "single",
     roomType: "1BHK",
     currentOccupants: "",
@@ -68,68 +69,64 @@ function CreatePost() {
     setForm((s) => ({ ...s, [name]: value }));
   };
 
-  const handleImagePaste = (e, fieldName) => {
-    const items = e.clipboardData?.items;
-    const text = e.clipboardData?.getData("text")?.trim();
+  const validateImage = (file) => {
+    if (!file.type.startsWith("image/")) {
+      return `"${file.name}" is not an image file.`;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      return `"${file.name}" must be 5MB or smaller.`;
+    }
+    return "";
+  };
 
-    if (items) {
-      for (const item of items) {
-        if (!item.type.includes("image")) continue;
-        const file = item.getAsFile();
-        if (!file) continue;
+  const handleProfileImage = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const base64Image = event.target.result;
-          setForm((s) => {
-            if (fieldName === "roomPhotos") {
-              return {
-                ...s,
-                roomPhotos: [...s.roomPhotos, base64Image],
-                roomPhotoPreviews: [...s.roomPhotoPreviews, base64Image],
-              };
-            }
-
-            return {
-              ...s,
-              profileImage: base64Image,
-              profileImagePreview: base64Image,
-            };
-          });
-        };
-        reader.readAsDataURL(file);
-        e.preventDefault();
-        return;
-      }
+    const validationError = validateImage(file);
+    if (validationError) {
+      e.target.value = "";
+      return setError(validationError);
     }
 
-    if (!text) return;
+    setError("");
+    if (profileImage?.preview) URL.revokeObjectURL(profileImage.preview);
+    setProfileImage({
+      file,
+      preview: URL.createObjectURL(file),
+    });
+  };
 
-    if (fieldName === "roomPhotos") {
-      const pastedUrls = normalizePhotoList(text);
-      if (pastedUrls.length === 0) return;
+  const handleRoomImages = (e) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
 
-      setForm((s) => ({
-        ...s,
-        roomPhotos: Array.from(new Set([...s.roomPhotos, ...pastedUrls])),
-      }));
-      e.preventDefault();
-      return;
+    if (files.length > MAX_IMAGES) {
+      e.target.value = "";
+      return setError("You can upload a maximum of 5 room images.");
     }
 
-    setForm((s) => ({
-      ...s,
-      profileImage: normalizeImageUrl(text),
-      profileImagePreview: normalizeImageUrl(text),
-    }));
-    e.preventDefault();
+    const validationError = files.map(validateImage).find(Boolean);
+    if (validationError) {
+      e.target.value = "";
+      return setError(validationError);
+    }
+
+    setError("");
+    roomImages.forEach(({ preview }) => URL.revokeObjectURL(preview));
+    setRoomImages(
+      files.map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+      }))
+    );
   };
 
   // Validate required fields
   const validateFields = () => {
     const required = {
-      common: ["profileImage", "name", "age", "location", "description"],
-      joinMyFlat: ["roomPhotos", "sharingType", "roomType", "rentPerPerson"],
+      common: ["name", "age", "location", "description"],
+      joinMyFlat: ["sharingType", "roomType", "rentPerPerson"],
       partnerUp: ["preferredLocation", "movingDateFrom", "budget"],
     };
 
@@ -144,6 +141,7 @@ function CreatePost() {
 
     // Check type-specific fields
     if (postType === "join-my-flat") {
+      if (roomImages.length === 0) missing.push("images");
       required.joinMyFlat.forEach((field) => {
         if (!form[field] || (Array.isArray(form[field]) && form[field].length === 0)) {
           missing.push(field);
@@ -152,6 +150,7 @@ function CreatePost() {
     }
 
     if (postType === "partner-up") {
+      if (!profileImage) missing.push("profileImage");
       required.partnerUp.forEach((field) => {
         if (!form[field]) {
           missing.push(field);
@@ -171,26 +170,34 @@ function CreatePost() {
     }
 
     setLoading(true);
+    setUploadProgress(0);
 
     try {
-      const payload = { ...form };
-      payload.type = postType;
+      const payload = new FormData();
+      payload.append("type", postType);
 
-      if (postType !== "join-my-flat") {
-        delete payload.roomPhotos;
-      } else {
-        // Support newline/comma-separated URLs to avoid broken image parsing
-        payload.roomPhotos = form.roomPhotos.filter(url => url.trim());
+      Object.entries(form).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach((item) => payload.append(key, item));
+        } else if (value !== "") {
+          payload.append(key, value);
+        }
+      });
+
+      if (postType === "join-my-flat") {
+        roomImages.forEach(({ file }) => payload.append("images", file));
       }
 
-      if (payload.age) payload.age = Number(payload.age);
-      if (payload.rentPerPerson) payload.rentPerPerson = Number(payload.rentPerPerson);
-      if (payload.budget) payload.budget = Number(payload.budget);
-      if (payload.currentOccupants) payload.currentOccupants = Number(payload.currentOccupants);
-      if (payload.totalCapacity) payload.totalCapacity = Number(payload.totalCapacity);
+      if (postType === "partner-up") {
+        payload.append("profileImage", profileImage.file);
+      }
 
       await API.post("/posts", payload, {
         headers: { Authorization: `Bearer ${token}` },
+        onUploadProgress: (event) => {
+          if (!event.total) return;
+          setUploadProgress(Math.round((event.loaded * 100) / event.total));
+        },
       });
 
       setMsg("Post created successfully!");
@@ -239,23 +246,27 @@ function CreatePost() {
             </p>
           </div>
 
-          <div className="create-row">
-            <div className="create-field">
-              <label>Profile Image (required) - Paste image from Chrome or enter URL</label>
-              <input
-                type="text"
-                name="profileImage"
-                placeholder="https://example.com/image.jpg"
-                value={form.profileImage}
-                onChange={handleInput}
-                onPaste={(e) => handleImagePaste(e, "profileImage")}
-                required
-              />
-              {form.profileImage && form.profileImage.startsWith("data:") && (
-                <img src={form.profileImage} alt="Profile preview" style={{ maxHeight: "100px", marginTop: "10px", borderRadius: "5px" }} />
-              )}
+          {postType === "partner-up" && (
+            <div className="create-row">
+              <div className="create-field">
+                <label>Profile Image (required)</label>
+                <input
+                  type="file"
+                  name="profileImage"
+                  accept="image/*"
+                  onChange={handleProfileImage}
+                  required
+                />
+                {profileImage && (
+                  <img
+                    src={profileImage.preview}
+                    alt="Profile preview"
+                    style={{ maxHeight: "120px", marginTop: "10px", borderRadius: "5px" }}
+                  />
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="create-row create-row-two">
             <div className="create-field">
@@ -306,36 +317,29 @@ function CreatePost() {
           {postType === "join-my-flat" && (
             <div className="create-row">
               <div className="create-field">
-                <label>Room Photo URLs (required) - one per line or comma separated - Paste images from Chrome</label>
-              <textarea
-                placeholder="Paste images from Chrome or enter URLs: https://example.com/room1.jpg"
-                value={form.roomPhotos.join('\n')}
-                onChange={(e) => {
-                  const urls = e.target.value
-                    .split(/[\n,]/)
-                    .map((u) => u.trim())
-                    .filter(Boolean);
-                  setForm(s => ({ ...s, roomPhotos: urls }));
-                }}
-                onPaste={(e) => handleImagePaste(e, "roomPhotos")}
-                rows={3}
-              />
-              {form.roomPhotos.length > 0 && (
+                <label>Room Images (required, maximum 5)</label>
+                <input
+                  type="file"
+                  name="images"
+                  accept="image/*"
+                  multiple
+                  onChange={handleRoomImages}
+                  required
+                />
+              {roomImages.length > 0 && (
                 <div style={{ marginTop: "10px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "10px" }}>
-                  {form.roomPhotos.map((photo, idx) => (
-                    <div key={idx} style={{ position: "relative" }}>
+                  {roomImages.map(({ file, preview }, idx) => (
+                    <div key={`${file.name}-${file.lastModified}`} style={{ position: "relative" }}>
                       <img
-                        src={photo}
+                        src={preview}
                         alt={`Room ${idx + 1}`}
                         style={{ maxHeight: "80px", maxWidth: "100%", borderRadius: "5px", objectFit: "cover" }}
                       />
                       <button
                         type="button"
                         onClick={() => {
-                          setForm(s => ({
-                            ...s,
-                            roomPhotos: s.roomPhotos.filter((_, i) => i !== idx),
-                          }));
+                          URL.revokeObjectURL(preview);
+                          setRoomImages((images) => images.filter((_, i) => i !== idx));
                         }}
                         style={{
                           position: "absolute",
@@ -520,6 +524,19 @@ function CreatePost() {
               {loading ? "Publishing..." : "Publish Post"}
             </button>
           </div>
+          {loading && (
+            <div className="create-row" aria-live="polite">
+              <div className="create-field">
+                <label htmlFor="upload-progress">Uploading: {uploadProgress}%</label>
+                <progress
+                  id="upload-progress"
+                  value={uploadProgress}
+                  max="100"
+                  style={{ width: "100%" }}
+                />
+              </div>
+            </div>
+          )}
         </form>
       </div>
     </div>

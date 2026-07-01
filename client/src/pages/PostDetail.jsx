@@ -6,6 +6,18 @@ import { normalizeImageUrl, normalizePhotoList } from "../utils/imageUrls";
 import { ensureMobileNumber } from "../utils/phoneRequirement";
 import "../styles/PostDetail.css";
 
+const MAX_IMAGES = 5;
+
+const imageUrl = (image) =>
+  normalizeImageUrl(typeof image === "string" ? image : image?.url);
+
+const postRoomImages = (post) => {
+  const cloudinaryImages = (post?.images ?? []).map(imageUrl).filter(Boolean);
+  return cloudinaryImages.length
+    ? cloudinaryImages
+    : normalizePhotoList(post?.roomPhotos);
+};
+
 function PostDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -16,6 +28,8 @@ function PostDetail() {
   const [contactMessage, setContactMessage] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
+  const [replacementImages, setReplacementImages] = useState([]);
+  const [replacementProfileImage, setReplacementProfileImage] = useState(null);
 
   const token = localStorage.getItem("token");
   const user = (() => {
@@ -52,21 +66,98 @@ function PostDetail() {
   }, [fetchPost]);
 
   const startEditing = () => {
+    setReplacementImages([]);
+    setReplacementProfileImage(null);
     setIsEditing(true);
   };
 
   const cancelEditing = () => {
+    replacementImages.forEach(({ preview }) => URL.revokeObjectURL(preview));
+    if (replacementProfileImage?.preview) {
+      URL.revokeObjectURL(replacementProfileImage.preview);
+    }
+    setReplacementImages([]);
+    setReplacementProfileImage(null);
     setIsEditing(false);
     setEditForm(post);
   };
 
+  const selectRoomImages = (event) => {
+    const files = Array.from(event.target.files ?? []);
+
+    if (files.length > MAX_IMAGES) {
+      event.target.value = "";
+      return alert("You can select a maximum of 5 images.");
+    }
+
+    if (files.some((file) => !file.type.startsWith("image/"))) {
+      event.target.value = "";
+      return alert("Only image files are allowed.");
+    }
+
+    replacementImages.forEach(({ preview }) => URL.revokeObjectURL(preview));
+    setReplacementImages(
+      files.map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+      }))
+    );
+  };
+
+  const selectProfileImage = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      event.target.value = "";
+      return alert("Only image files are allowed.");
+    }
+
+    if (replacementProfileImage?.preview) {
+      URL.revokeObjectURL(replacementProfileImage.preview);
+    }
+    setReplacementProfileImage({
+      file,
+      preview: URL.createObjectURL(file),
+    });
+  };
+
   const updatePost = async () => {
     try {
-      const res = await API.put(`/posts/${id}`, editForm, {
+      const payload = new FormData();
+      const editableFields = [
+        "name",
+        "age",
+        "location",
+        "description",
+        "rentPerPerson",
+        "sharingType",
+        "budget",
+        "preferredLocation",
+      ];
+
+      editableFields.forEach((field) => {
+        if (editForm[field] !== undefined && editForm[field] !== null) {
+          payload.append(field, editForm[field]);
+        }
+      });
+
+      replacementImages.forEach(({ file }) => payload.append("images", file));
+      if (replacementProfileImage) {
+        payload.append("profileImage", replacementProfileImage.file);
+      }
+
+      const res = await API.put(`/posts/${id}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPost(res.data);
       setEditForm(res.data);
+      replacementImages.forEach(({ preview }) => URL.revokeObjectURL(preview));
+      if (replacementProfileImage?.preview) {
+        URL.revokeObjectURL(replacementProfileImage.preview);
+      }
+      setReplacementImages([]);
+      setReplacementProfileImage(null);
       setIsEditing(false);
       alert("Post updated successfully!");
     } catch (error) {
@@ -109,6 +200,8 @@ function PostDetail() {
 
   const isOwner = token && user && post?.createdBy?._id === user._id;
   const isAccepted = contactRequest?.status === "accepted";
+  const existingRoomImages = postRoomImages(post);
+  const existingProfileImage = imageUrl(post?.profileImage);
 
   if (loading) {
     return (
@@ -221,6 +314,38 @@ function PostDetail() {
                       </select>
                     </div>
                   </div>
+                  <div className="form-group">
+                    <label>Current Room Images</label>
+                    <div className="gallery-thumbnails">
+                      {existingRoomImages.map((url, index) => (
+                        <img
+                          key={url}
+                          src={url}
+                          alt={`Current room ${index + 1}`}
+                          style={{ width: "90px", height: "70px", objectFit: "cover", borderRadius: "6px" }}
+                        />
+                      ))}
+                    </div>
+                    <label>Replace Room Images (maximum 5)</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={selectRoomImages}
+                    />
+                    {replacementImages.length > 0 && (
+                      <div className="gallery-thumbnails">
+                        {replacementImages.map(({ file, preview }, index) => (
+                          <img
+                            key={`${file.name}-${file.lastModified}`}
+                            src={preview}
+                            alt={`New room ${index + 1}`}
+                            style={{ width: "90px", height: "70px", objectFit: "cover", borderRadius: "6px" }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
 
@@ -250,6 +375,31 @@ function PostDetail() {
                         }
                       />
                     </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Current Profile Image</label>
+                    {existingProfileImage ? (
+                      <img
+                        src={existingProfileImage}
+                        alt="Current profile"
+                        style={{ width: "110px", height: "110px", objectFit: "cover", borderRadius: "8px" }}
+                      />
+                    ) : (
+                      <p>No profile image</p>
+                    )}
+                    <label>Replace Profile Image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={selectProfileImage}
+                    />
+                    {replacementProfileImage && (
+                      <img
+                        src={replacementProfileImage.preview}
+                        alt="New profile preview"
+                        style={{ width: "110px", height: "110px", objectFit: "cover", borderRadius: "8px" }}
+                      />
+                    )}
                   </div>
                 </>
               )}
@@ -295,7 +445,7 @@ function PostDetail() {
             {post.type === "join-my-flat" ? (
               <div className="post-detail-hero">
                 <ImageGallery
-                  images={normalizePhotoList(post.roomPhotos)}
+                  images={existingRoomImages}
                   title={post.name || "Listing"}
                   roomType={post.roomType}
                   placeholderText="Room photos not provided yet"
@@ -303,10 +453,10 @@ function PostDetail() {
               </div>
             ) : (
               <div className="post-detail-hero post-detail-hero-partner">
-                {post.profileImage ? (
+                {existingProfileImage ? (
                   <img
                     className="post-detail-profilehero-img"
-                    src={normalizeImageUrl(post.profileImage)}
+                    src={existingProfileImage}
                     alt={post.name}
                   />
                 ) : (

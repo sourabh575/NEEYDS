@@ -53,7 +53,7 @@ function ImageGallery({
             src={validImages[selectedIndex]}
             alt={`${title} ${selectedIndex + 1}`}
             className="gallery-image"
-            loading="eager"
+            loading={compact ? "lazy" : "eager"}
             decoding="async"
             onError={() => handleImageError(selectedIndex)}
           />
@@ -126,4 +126,4 @@ function ImageGallery({
   );
 }
 
-export default ImageGallery;
+export default React.memo(ImageGallery);

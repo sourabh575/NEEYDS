@@ -1,4 +1,5 @@
 import Post from "../models/Post.js";
+import cloudinary from "../config/cloudinary.js";
 
 const normalizeImageUrl = (url) => {
   if (url == null || typeof url !== "string") return "";
@@ -88,18 +89,28 @@ const ensureFields = (obj, fields) => {
 export const createPost = async (req, res) => {
   try {
     const data = req.body || {};
+    const roomImageFiles = req.files?.images ?? [];
+    const profileImageFile = req.files?.profileImage?.[0];
 
     // Common required
-    const missingCommon = ensureFields(data, COMMON_REQUIRED);
+    const commonRequired =
+      data.type === "partner-up"
+        ? COMMON_REQUIRED.filter((field) => field !== "profileImage")
+        : COMMON_REQUIRED;
+    const missingCommon = ensureFields(data, commonRequired);
     if (missingCommon.length) {
       return res.status(400).json({ message: `Missing fields: ${missingCommon.join(", ")}` });
     }
 
     // Type-specific validations
     if (data.type === "join-my-flat") {
-      const missing = ensureFields(data, ["roomPhotos", "sharingType", "roomType", "rentPerPerson"]);
+      const missing = ensureFields(data, ["sharingType", "roomType", "rentPerPerson"]);
       if (missing.length) {
         return res.status(400).json({ message: `Missing join-my-flat fields: ${missing.join(", ")}` });
+      }
+
+      if (!roomImageFiles.length) {
+        return res.status(400).json({ message: "Upload at least one room image." });
       }
     } 
 
@@ -108,22 +119,41 @@ export const createPost = async (req, res) => {
       if (missing.length) {
         return res.status(400).json({ message: `Missing partner-up fields: ${missing.join(", ")}` });
       }
+
+      if (!profileImageFile) {
+        return res.status(400).json({ message: "Upload a profile image." });
+      }
     }
 
-    const profileImage = normalizeImageUrl(data.profileImage);
+    const profileImage =
+      data.type === "partner-up"
+        ? {
+            public_id: profileImageFile.filename,
+            url: profileImageFile.path,
+          }
+        : normalizeImageUrl(data.profileImage);
     const roomPhotos =
       data.type === "join-my-flat" ? normalizePhotoList(data.roomPhotos) : [];
 
-    if (data.type === "join-my-flat" && roomPhotos.length === 0) {
-      return res.status(400).json({ message: "Add at least one valid room photo URL" });
-    }
+    const images =
+      data.type === "join-my-flat"
+        ? roomImageFiles.map((file) => ({
+            public_id: file.filename,
+            url: file.path,
+          }))
+        : undefined;
 
-    const { roomPhotos: _dropRoom, profileImage: _dropProfile, ...rest } = data;
+    const {
+      roomPhotos: _dropRoom,
+      images: _dropImages,
+      profileImage: _dropProfile,
+      ...rest
+    } = data;
 
     const post = await Post.create({
       ...rest,
       profileImage,
-      ...(data.type === "join-my-flat" ? { roomPhotos } : {}),
+      ...(data.type === "join-my-flat" ? { roomPhotos, images } : {}),
       createdBy: req.user._id,
     });
 
@@ -188,6 +218,23 @@ export const updatePost = async (req, res) => {
       return res.status(401).json({ message: "Not authorized" });
     }
 
+    const newImageFiles = req.files?.images ?? [];
+    const newProfileImageFile = req.files?.profileImage?.[0];
+    let oldImagePublicIds = [];
+    let oldProfileImagePublicId;
+
+    if (newImageFiles.length && (req.body.type ?? post.type) !== "join-my-flat") {
+      return res.status(400).json({
+        message: "Room images can only be uploaded for Join My Flat posts.",
+      });
+    }
+
+    if (newProfileImageFile && (req.body.type ?? post.type) !== "partner-up") {
+      return res.status(400).json({
+        message: "Profile images can only be uploaded for Partner Up posts.",
+      });
+    }
+
     // fields allowed to update
     const allowed = [
       "type",
@@ -219,25 +266,66 @@ export const updatePost = async (req, res) => {
 
     Object.keys(req.body).forEach((key) => {
       if (allowed.includes(key)) {
+        if (
+          key === "profileImage" &&
+          (req.body.type ?? post.type) === "partner-up"
+        ) {
+          return;
+        }
         post[key] = req.body[key];
       }
     });
 
-    if (req.body.profileImage !== undefined) {
+    if (
+      req.body.profileImage !== undefined &&
+      (req.body.type ?? post.type) !== "partner-up"
+    ) {
       post.profileImage = normalizeImageUrl(req.body.profileImage);
     }
     if (req.body.roomPhotos !== undefined) {
       post.roomPhotos = normalizePhotoList(req.body.roomPhotos);
     }
 
+    if (newImageFiles.length) {
+      oldImagePublicIds = (post.images ?? [])
+        .map((image) => image.public_id)
+        .filter(Boolean);
+
+      post.images = newImageFiles.map((file) => ({
+        public_id: file.filename,
+        url: file.path,
+      }));
+    }
+
+    if (newProfileImageFile) {
+      oldProfileImagePublicId = post.profileImage?.public_id;
+      post.profileImage = {
+        public_id: newProfileImageFile.filename,
+        url: newProfileImageFile.path,
+      };
+    }
+
     // Additional safety: if type is changed, ensure required fields for that type exist
     if (post.type === "join-my-flat") {
-      const missing = ensureFields(post, ["roomPhotos", "sharingType", "roomType", "rentPerPerson"]);
+      const missing = ensureFields(post, ["sharingType", "roomType", "rentPerPerson"]);
+      if (!post.images?.length && !post.roomPhotos?.length) {
+        missing.push("images");
+      }
       if (missing.length) return res.status(400).json({ message: `Missing join-my-flat fields: ${missing.join(", ")}` });
     }
     if (post.type === "partner-up") {
       const missing = ensureFields(post, ["preferredLocation", "movingDateFrom", "budget"]);
       if (missing.length) return res.status(400).json({ message: `Missing partner-up fields: ${missing.join(", ")}` });
+    }
+
+    if (oldImagePublicIds.length) {
+      await Promise.all(
+        oldImagePublicIds.map((publicId) => cloudinary.uploader.destroy(publicId))
+      );
+    }
+
+    if (oldProfileImagePublicId) {
+      await cloudinary.uploader.destroy(oldProfileImagePublicId);
     }
 
     const updated = await post.save();
@@ -256,6 +344,29 @@ export const deletePost = async (req, res) => {
     if (post.createdBy.toString() !== req.user._id.toString()) {
       return res.status(401).json({ message: "Not authorized" });
     }
+
+    const publicIds = new Set();
+
+    if (post.type === "join-my-flat") {
+      (post.images ?? []).forEach((image) => {
+        if (image.public_id) publicIds.add(image.public_id);
+      });
+
+      if (post.profileImage?.public_id) {
+        publicIds.add(post.profileImage.public_id);
+      }
+    }
+
+    if (post.type === "partner-up" && post.profileImage?.public_id) {
+      publicIds.add(post.profileImage.public_id);
+    }
+
+    if (publicIds.size) {
+      await Promise.all(
+        [...publicIds].map((publicId) => cloudinary.uploader.destroy(publicId))
+      );
+    }
+
     await post.deleteOne();
     res.json({ message: "Post deleted successfully" });
   } catch (error) {

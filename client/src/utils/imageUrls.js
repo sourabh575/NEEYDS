@@ -3,6 +3,9 @@
  * Matches backend postController normalization.
  */
 export function normalizeImageUrl(url) {
+  if (url && typeof url === "object") {
+    url = url.secure_url || url.url;
+  }
   if (url == null || typeof url !== "string") return "";
   let u = url.trim();
   if (!u) return "";
@@ -64,7 +67,7 @@ export function normalizePhotoList(raw) {
   const out = [];
   const seen = new Set();
   for (const item of list) {
-    const n = normalizeImageUrl(typeof item === "string" ? item : String(item ?? ""));
+    const n = normalizeImageUrl(item);
     if (n && !seen.has(n)) {
       seen.add(n);
       out.push(n);
@@ -75,8 +78,10 @@ export function normalizePhotoList(raw) {
 
 export function getPostDisplayImages(post) {
   if (!post || typeof post !== "object") return [];
+  const cloudinaryImages = normalizePhotoList(post.images);
   const room = normalizePhotoList(post.roomPhotos);
   const profile = normalizeImageUrl(post.profileImage);
+  if (cloudinaryImages.length > 0) return cloudinaryImages;
   if (room.length > 0) return room;
   if (profile) return [profile];
   return [];

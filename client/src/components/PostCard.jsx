@@ -1,5 +1,23 @@
+import { memo, useMemo, useState } from "react";
 import ImageGallery from "./ImageGallery";
-import { normalizePhotoList, normalizeImageUrl } from "../utils/imageUrls";
+import { getPostDisplayImages, normalizeImageUrl } from "../utils/imageUrls";
+
+function FeedImage({ src, alt, className, fallback }) {
+  const [failedSrc, setFailedSrc] = useState("");
+
+  if (!src || failedSrc === src) return fallback;
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailedSrc(src)}
+    />
+  );
+}
 
 function PostCard({
   post,
@@ -8,8 +26,14 @@ function PostCard({
   onWishlistToggle,
   contactAction,
 }) {
-  const getPostImages = () =>
-    post?.type === "join-my-flat" ? normalizePhotoList(post.roomPhotos) : [];
+  const postImages = useMemo(
+    () => (post?.type === "join-my-flat" ? getPostDisplayImages(post) : []),
+    [post]
+  );
+  const profileImageUrl = useMemo(
+    () => normalizeImageUrl(post?.profileImage),
+    [post?.profileImage]
+  );
 
   const handleOpen = () => {
     onOpen?.(post._id);
@@ -31,7 +55,7 @@ function PostCard({
         <>
           <div className="card-image card-image-join">
             <ImageGallery
-              images={getPostImages()}
+              images={postImages}
               title={post.name || "Listing"}
               roomType={post.roomType}
               placeholderText="No room photos"
@@ -50,13 +74,15 @@ function PostCard({
           <div className="card-content join-flat-content">
             <div className="card-user-row">
               <div className="card-user-mini-avatar">
-                {post.profileImage ? (
-                  <img src={normalizeImageUrl(post.profileImage)} alt={post.name} />
-                ) : (
-                  <span className="avatar-initial">
-                    {(post.name || "U").charAt(0).toUpperCase()}
-                  </span>
-                )}
+                <FeedImage
+                  src={profileImageUrl}
+                  alt={post.name || "User"}
+                  fallback={
+                    <span className="avatar-initial">
+                      {(post.name || "U").charAt(0).toUpperCase()}
+                    </span>
+                  }
+                />
               </div>
               <div className="card-user-mini-info">
                 <span className="user-mini-name">{post.name || "User"}</span>
@@ -122,17 +148,16 @@ function PostCard({
           </div>
           <div className="partner-profile-section">
             <div className="partner-avatar-large">
-              {post.profileImage ? (
-                <img
-                  src={normalizeImageUrl(post.profileImage)}
-                  alt={post.name}
-                  className="partner-profile-image"
-                />
-              ) : (
-                <div className="partner-avatar-placeholder">
-                  <span>{(post.name || "U").charAt(0).toUpperCase()}</span>
-                </div>
-              )}
+              <FeedImage
+                src={profileImageUrl}
+                alt={post.name || "User"}
+                className="partner-profile-image"
+                fallback={
+                  <div className="partner-avatar-placeholder">
+                    <span>{(post.name || "U").charAt(0).toUpperCase()}</span>
+                  </div>
+                }
+              />
             </div>
           </div>
 
@@ -215,4 +240,10 @@ function PostCard({
   );
 }
 
-export default PostCard;
+const propsAreEqual = (previous, next) =>
+  previous.post === next.post &&
+  previous.isSaved === next.isSaved &&
+  previous.contactAction?.label === next.contactAction?.label &&
+  previous.contactAction?.disabled === next.contactAction?.disabled;
+
+export default memo(PostCard, propsAreEqual);

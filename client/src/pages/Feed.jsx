@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import PostCard from "../components/PostCard";
@@ -18,6 +18,7 @@ function Feed() {
     location: "",
   });
   const [showFilters, setShowFilters] = useState(false);
+  const wishlistSet = useMemo(() => new Set(wishlist), [wishlist]);
 
   const token = localStorage.getItem("token");
   const user = (() => {
@@ -335,7 +336,7 @@ function Feed() {
             <PostCard
               key={post._id}
               post={post}
-              isSaved={wishlist.includes(post._id)}
+              isSaved={wishlistSet.has(post._id)}
               onOpen={openPost}
               onWishlistToggle={handleWishlist}
               contactAction={getContactAction(post)}
