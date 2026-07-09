@@ -51,7 +51,9 @@ const uploadErrorHandler = (error, req, res, next) => {
     return res.status(400).json({ message: error.message });
   }
 
-  next(error);
+  return res.status(error?.http_code || error?.statusCode || 500).json({
+    message: `Image upload failed: ${error?.message || "Unknown upload error"}`,
+  });
 };
 
 export { uploadErrorHandler };

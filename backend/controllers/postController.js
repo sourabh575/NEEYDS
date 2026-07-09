@@ -67,7 +67,6 @@ const normalizePhotoList = (raw) => {
 
 const COMMON_REQUIRED = [
   "type",
-  "profileImage",
   "name",
   "age",
   "gender",
@@ -93,11 +92,7 @@ export const createPost = async (req, res) => {
     const profileImageFile = req.files?.profileImage?.[0];
 
     // Common required
-    const commonRequired =
-      data.type === "partner-up"
-        ? COMMON_REQUIRED.filter((field) => field !== "profileImage")
-        : COMMON_REQUIRED;
-    const missingCommon = ensureFields(data, commonRequired);
+    const missingCommon = ensureFields(data, COMMON_REQUIRED);
     if (missingCommon.length) {
       return res.status(400).json({ message: `Missing fields: ${missingCommon.join(", ")}` });
     }
@@ -131,7 +126,7 @@ export const createPost = async (req, res) => {
             public_id: profileImageFile.filename,
             url: profileImageFile.path,
           }
-        : normalizeImageUrl(data.profileImage);
+        : undefined;
     const roomPhotos =
       data.type === "join-my-flat" ? normalizePhotoList(data.roomPhotos) : [];
 
