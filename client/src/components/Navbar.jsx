@@ -32,7 +32,12 @@ function Navbar() {
   return (
     <header className="nav-root">
       <nav className="nav-container">
-        <div className="nav-left" onClick={() => navigate("/")}>
+        <Link className="nav-home-link" to="/" aria-label="Home">
+          <span className="nav-home-icon" aria-hidden="true"></span>
+          <span>Home</span>
+        </Link>
+
+        <div className="nav-left" onClick={() => navigate("/feed")}>
           <span className="nav-logo">Neeyds</span>
           <span className="nav-tagline">Find your perfect roommate</span>
         </div>
@@ -45,7 +50,7 @@ function Navbar() {
             Profile
           </Link>
           <Link className="nav-link" to="/wishlist">
-            ❤️ Wishlist
+            Wishlist
           </Link>
           <Link className="nav-link nav-link-with-badge" to="/contact-requests">
             Requests
@@ -73,5 +78,3 @@ function Navbar() {
 }
 
 export default Navbar;
-
-

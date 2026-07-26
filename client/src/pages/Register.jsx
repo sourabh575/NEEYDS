@@ -57,7 +57,7 @@ const Register = () => {
           },
         });
 
-        navigate("/", { replace: true });
+        navigate("/feed", { replace: true });
       } else {
         setError("Registration succeeded, but automatic login failed. Please sign in.");
       }

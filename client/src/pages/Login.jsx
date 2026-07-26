@@ -34,7 +34,7 @@ function Login() {
           },
         });
 
-        navigate("/", { replace: true });
+        navigate("/feed", { replace: true });
       } else {
         setError("Invalid response from server.");
       }
@@ -65,7 +65,7 @@ function Login() {
         },
       });
 
-      navigate("/", { replace: true });
+      navigate("/feed", { replace: true });
     } catch (error) {
       console.error("Google login failed:", error);
       setError("Google login failed. Try again.");

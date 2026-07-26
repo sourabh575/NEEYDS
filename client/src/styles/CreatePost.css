@@ -55,6 +55,30 @@
   gap: 1rem;
 }
 
+.create-type-help {
+  padding: 0.95rem 1rem;
+  border-radius: 0.85rem;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  color: #334155;
+}
+
+.create-type-help p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.create-type-help.join-my-flat {
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+}
+
+.create-type-help.partner-up {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
 .create-row {
   display: flex;
   flex-direction: column;
@@ -130,6 +154,53 @@
 .create-submit:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.create-image-preview {
+  margin-top: 0.65rem;
+  border-radius: 0.6rem;
+  object-fit: cover;
+}
+
+.create-image-preview-profile {
+  width: 120px;
+  height: 120px;
+}
+
+.create-image-grid {
+  margin-top: 0.7rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 0.7rem;
+}
+
+.create-image-thumb {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 0.75rem;
+  overflow: visible;
+}
+
+.create-image-thumb img {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.75rem;
+  object-fit: cover;
+}
+
+.create-image-thumb button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
 }
 
 /* Type Toggle Buttons */

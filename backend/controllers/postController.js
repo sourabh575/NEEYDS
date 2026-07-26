@@ -156,7 +156,28 @@ export const createPost = async (req, res) => {
 
     res.status(201).json(populated);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    const uploadedPublicIds = [
+      ...(req.files?.images ?? []),
+      ...(req.files?.profileImage ?? []),
+    ]
+      .map((file) => file.filename)
+      .filter(Boolean);
+
+    if (uploadedPublicIds.length) {
+      await Promise.allSettled(
+        uploadedPublicIds.map((publicId) => cloudinary.uploader.destroy(publicId))
+      );
+    }
+
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        message: Object.values(error.errors)
+          .map((err) => err.message)
+          .join(", "),
+      });
+    }
+
+    res.status(500).json({ message: "Failed to create post", error: error.message });
   }
 };
 

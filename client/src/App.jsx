@@ -1,4 +1,10 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { useState, useEffect } from "react";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -20,7 +26,7 @@ function ProtectedRoute({ children, token, redirectTo = "/login" }) {
         to={redirectTo}
         replace
         state={{
-          authPrompt: "Please login to continue",
+          authPrompt: "Please login to access the feed",
         }}
       />
     );
@@ -28,54 +34,23 @@ function ProtectedRoute({ children, token, redirectTo = "/login" }) {
   return children;
 }
 
-function App() {
-  const [auth, setAuth] = useState(() => ({
-    token: localStorage.getItem("token"),
-    user: localStorage.getItem("user"),
-  }));
-
-  useEffect(() => {
-    const syncAuthFromStorage = () =>
-      setAuth({
-        token: localStorage.getItem("token"),
-        user: localStorage.getItem("user"),
-      });
-
-    window.addEventListener("authchange", syncAuthFromStorage);
-    window.addEventListener("storage", syncAuthFromStorage);
-
-    return () => {
-      window.removeEventListener("authchange", syncAuthFromStorage);
-      window.removeEventListener("storage", syncAuthFromStorage);
-    };
-  }, []);
-
-  const isAuthed = Boolean(auth.token && auth.user);
+function AppRoutes({ auth, isAuthed }) {
+  const location = useLocation();
+  const showAppNavbar = isAuthed && location.pathname !== "/";
 
   return (
-    <Router>
-      {isAuthed && <Navbar />}
+    <>
+      {showAppNavbar && <Navbar />}
       <Routes>
-        <Route
-          path="/"
-          element={
-            isAuthed ? (
-              <ProtectedRoute token={auth.token}>
-                <Feed />
-              </ProtectedRoute>
-            ) : (
-              <LandingPage />
-            )
-          }
-        />
+        <Route path="/" element={<LandingPage isAuthed={isAuthed} />} />
 
         <Route
           path="/login"
-          element={isAuthed ? <Navigate to="/" replace /> : <Login />}
+          element={isAuthed ? <Navigate to="/feed" replace /> : <Login />}
         />
         <Route
           path="/register"
-          element={isAuthed ? <Navigate to="/" replace /> : <Register />}
+          element={isAuthed ? <Navigate to="/feed" replace /> : <Register />}
         />
 
         <Route
@@ -138,6 +113,37 @@ function App() {
         <Route path="/google-login" element={<Loginbygoogle />} />
         <Route path="*" element={<Navigate to={isAuthed ? "/feed" : "/"} replace />} />
       </Routes>
+    </>
+  );
+}
+
+function App() {
+  const [auth, setAuth] = useState(() => ({
+    token: localStorage.getItem("token"),
+    user: localStorage.getItem("user"),
+  }));
+
+  useEffect(() => {
+    const syncAuthFromStorage = () =>
+      setAuth({
+        token: localStorage.getItem("token"),
+        user: localStorage.getItem("user"),
+      });
+
+    window.addEventListener("authchange", syncAuthFromStorage);
+    window.addEventListener("storage", syncAuthFromStorage);
+
+    return () => {
+      window.removeEventListener("authchange", syncAuthFromStorage);
+      window.removeEventListener("storage", syncAuthFromStorage);
+    };
+  }, []);
+
+  const isAuthed = Boolean(auth.token && auth.user);
+
+  return (
+    <Router>
+      <AppRoutes auth={auth} isAuthed={isAuthed} />
     </Router>
   );
 }

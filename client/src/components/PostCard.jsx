@@ -144,7 +144,7 @@ function PostCard({
             <span className="media-badge media-badge-price">
               {post.budget ? `₹${Number(post.budget).toLocaleString()}` : "Flexible"}
             </span>
-            <span className="media-badge">Need a Room</span>
+            <span className="media-badge">Partner Up</span>
           </div>
           <div className="partner-profile-section">
             <div className="partner-avatar-large">

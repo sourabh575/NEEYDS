@@ -1,28 +1,21 @@
 import { GoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
 
 const GoogleAuthButton = () => {
+  const navigate = useNavigate();
+
   const handleSuccess = async (res) => {
     try {
-      const googleToken = res.credential;
-
       const response = await API.post("/users/google-login", {
-        token: googleToken,
+        token: res.credential,
       });
 
-      // ✅ SAVE TOKEN
       localStorage.setItem("token", response.data.token);
-
-      // ✅ SAVE USER
-      localStorage.setItem(
-        "user",
-        JSON.stringify(response.data.user)
-      );
-
-      // ✅ TRIGGER AUTH UPDATE
+      localStorage.setItem("user", JSON.stringify(response.data.user));
       window.dispatchEvent(new Event("authchange"));
-
-    } catch (error) {
+      navigate("/feed", { replace: true });
+    } catch {
       console.log("Google Login Failed");
     }
   };

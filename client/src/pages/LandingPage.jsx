@@ -48,10 +48,10 @@ const trustPoints = [
   "Secure messaging",
 ];
 
-function LandingPage() {
+function LandingPage({ isAuthed = false }) {
   return (
     <div className="landing-shell">
-      <AuthNavbar />
+      <AuthNavbar isAuthed={isAuthed} />
 
       <main className="landing-main">
         <section className="landing-hero">
@@ -64,15 +64,22 @@ function LandingPage() {
             </p>
 
             <div className="landing-hero-actions">
-              <Link to="/register" className="landing-button landing-button-primary">
-                Get Started
+              <Link
+                to={isAuthed ? "/feed" : "/register"}
+                className="landing-button landing-button-primary"
+              >
+                {isAuthed ? "Go to Feed" : "Get Started"}
               </Link>
               <Link
-                to="/login"
-                state={{ authPrompt: "Please login to browse available rooms" }}
+                to={isAuthed ? "/create-post" : "/login"}
+                state={
+                  isAuthed
+                    ? undefined
+                    : { authPrompt: "Please login to browse available rooms" }
+                }
                 className="landing-button landing-button-secondary"
               >
-                Browse Rooms
+                {isAuthed ? "Create Post" : "Browse Rooms"}
               </Link>
             </div>
 
@@ -207,7 +214,7 @@ function LandingPage() {
         <section className="landing-section landing-about-section" id="about">
           <div className="landing-section-heading">
             <span>About us</span>
-            <h2>Neevys helps people find compatible roommates quickly and easily</h2>
+            <h2>Neeyds helps people find compatible roommates quickly and easily</h2>
             <p>
               We simplify the roommate search experience with clearer profiles,
               better discovery, and a polished flow that feels reliable from the first click.
@@ -221,8 +228,11 @@ function LandingPage() {
               <span className="landing-kicker">Ready to find your roommate?</span>
               <h2>Start your search with a profile that stands out</h2>
             </div>
-            <Link to="/register" className="landing-button landing-button-primary">
-              Sign Up Now
+            <Link
+              to={isAuthed ? "/create-post" : "/register"}
+              className="landing-button landing-button-primary"
+            >
+              {isAuthed ? "Create a Post" : "Sign Up Now"}
             </Link>
           </div>
         </section>
@@ -230,7 +240,7 @@ function LandingPage() {
 
       <footer className="landing-footer">
         <div className="landing-footer-brand">
-          <strong>Neevys</strong>
+          <strong>Neeyds</strong>
           <span>Better roommate decisions for modern renters.</span>
         </div>
         <div className="landing-footer-links">

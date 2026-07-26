@@ -55,7 +55,7 @@ connectDB();
 
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
-app.use("/api/contact-request", contactRequestRoutes);
+app.use("/api/contact-request", contactRequestRoutes); 
 app.use("/api/wishlist",wishlistRoutes);
 
 app.get("/", (req, res) => {

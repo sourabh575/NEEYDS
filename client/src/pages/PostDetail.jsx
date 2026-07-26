@@ -427,7 +427,7 @@ function PostDetail() {
                   }`}
                 >
                   {post.type === "join-my-flat" && "I Have a Room"}
-                  {post.type === "partner-up" && "Need a Room"}
+                  {post.type === "partner-up" && "Partner Up"}
                 </span>
               </div>
               {isOwner && (
@@ -466,7 +466,7 @@ function PostDetail() {
                   </div>
                 )}
                 <div className="post-detail-hero-partner-overlay">
-                  Need a Room
+                  Partner Up
                 </div>
               </div>
             )}

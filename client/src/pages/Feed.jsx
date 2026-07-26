@@ -231,7 +231,7 @@ function Feed() {
               className={`filter-toggle ${showFilters ? "active" : ""}`}
               onClick={() => setShowFilters(!showFilters)}
             >
-              <span className="filter-icon">Filter</span>
+              <span className="filter-icon" aria-hidden="true">☰</span>
               <span>Filters</span>
               {hasActiveFilters() && (
                 <span className="filter-count">
@@ -259,7 +259,7 @@ function Feed() {
                   >
                     <option value="">All Types</option>
                     <option value="join-my-flat">I Have a Room</option>
-                    <option value="partner-up">Need a Room</option>
+                    <option value="partner-up">Partner Up</option>
                   </select>
                 </div>
 
