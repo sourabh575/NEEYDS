@@ -22,7 +22,8 @@ const allowedOrigins = [
   "http://localhost:3001",
   "http://127.0.0.1:5173",
   "http://127.0.0.1:3000",
-  "https://neeyds.vercel.app", 
+  "https://neeyds.vercel.app",
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL.replace(/\/$/, "")] : []),
 ];
 
 app.use(
@@ -60,6 +61,10 @@ app.use("/api/wishlist",wishlistRoutes);
 
 app.get("/", (req, res) => {
   res.send("🚀 API running");
+});
+
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
 });
 
 const PORT = process.env.PORT || 5000;

@@ -153,7 +153,6 @@ function CreatePost() {
     });
 
     if (postType === "join-my-flat") {
-      if (roomImages.length === 0) missing.push("images");
       required.joinMyFlat.forEach((field) => {
         if (!form[field]) missing.push(field);
       });
@@ -349,14 +348,13 @@ function CreatePost() {
                 <>
                   <div className="create-row">
                     <div className="create-field">
-                      <label>Room Images (required, maximum 5)</label>
+                      <label>Room Images (optional, maximum 5)</label>
                       <input
                         type="file"
                         name="images"
                         accept="image/*"
                         multiple
                         onChange={handleRoomImages}
-                        required
                       />
                       {roomImages.length > 0 && (
                         <div className="create-image-grid">

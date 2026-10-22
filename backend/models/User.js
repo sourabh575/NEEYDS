@@ -25,6 +25,18 @@ const userSchema = new mongoose.Schema(
       required: false,
     },
 
+    age: {
+      type: Number,
+      min: 18,
+      max: 120,
+    },
+
+    location: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+    },
+
     phone: {
       type: String,
       trim: true,

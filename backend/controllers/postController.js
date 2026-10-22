@@ -104,9 +104,6 @@ export const createPost = async (req, res) => {
         return res.status(400).json({ message: `Missing join-my-flat fields: ${missing.join(", ")}` });
       }
 
-      if (!roomImageFiles.length) {
-        return res.status(400).json({ message: "Upload at least one room image." });
-      }
     } 
 
     if (data.type === "partner-up") {
@@ -225,6 +222,14 @@ export const getPostById = async (req, res) => {
 };
 
 export const updatePost = async (req, res) => {
+  const newlyUploadedPublicIds = [
+    ...(req.files?.images ?? []),
+    ...(req.files?.profileImage ?? []),
+  ]
+    .map((file) => file.filename)
+    .filter(Boolean);
+  let updateSucceeded = false;
+
   try {
     const post = await Post.findById(req.params.id);
 
@@ -232,6 +237,12 @@ export const updatePost = async (req, res) => {
 
     if (post.createdBy.toString() !== req.user._id.toString()) {
       return res.status(401).json({ message: "Not authorized" });
+    }
+
+    if (req.body.type && req.body.type !== post.type) {
+      return res.status(400).json({
+        message: "Listing type cannot be changed after a post is created.",
+      });
     }
 
     const newImageFiles = req.files?.images ?? [];
@@ -253,7 +264,6 @@ export const updatePost = async (req, res) => {
 
     // fields allowed to update
     const allowed = [
-      "type",
       "profileImage",
       "name",
       "age",
@@ -334,22 +344,35 @@ export const updatePost = async (req, res) => {
       if (missing.length) return res.status(400).json({ message: `Missing partner-up fields: ${missing.join(", ")}` });
     }
 
-    if (oldImagePublicIds.length) {
-      await Promise.all(
-        oldImagePublicIds.map((publicId) => cloudinary.uploader.destroy(publicId))
-      );
-    }
-
-    if (oldProfileImagePublicId) {
-      await cloudinary.uploader.destroy(oldProfileImagePublicId);
-    }
-
     const updated = await post.save();
     await updated.populate("createdBy", "name email");
 
+    // Only remove replaced assets after MongoDB has accepted the new post.
+    // A Cloudinary cleanup failure must not turn a successful update into an error.
+    const oldPublicIds = [...oldImagePublicIds, oldProfileImagePublicId].filter(Boolean);
+    if (oldPublicIds.length) {
+      const cleanup = await Promise.allSettled(
+        oldPublicIds.map((publicId) => cloudinary.uploader.destroy(publicId))
+      );
+      cleanup.forEach((result) => {
+        if (result.status === "rejected") {
+          console.error("Failed to remove replaced Cloudinary asset:", result.reason);
+        }
+      });
+    }
+
+    updateSucceeded = true;
     res.json(updated);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
+  } finally {
+    // Multer uploads before this controller runs. Clean those files when the
+    // request exits early because of validation/authorization or throws.
+    if (!updateSucceeded && newlyUploadedPublicIds.length) {
+      await Promise.allSettled(
+        newlyUploadedPublicIds.map((publicId) => cloudinary.uploader.destroy(publicId))
+      );
+    }
   }
 };
 

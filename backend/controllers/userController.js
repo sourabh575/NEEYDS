@@ -157,7 +157,7 @@ export const getUserById = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
-    const { name, gender, phone } = req.body;
+    const { name, gender, phone, age, location } = req.body;
 
     if (req.params.id !== req.user._id.toString()) {
       return res.status(403).json({ message: "You can only update your own profile" });
@@ -173,6 +173,8 @@ export const updateUser = async (req, res) => {
       return res.status(400).json({ message: "Mobile number is required" });
     }
     if (phone !== undefined) user.phone = phone;
+    if (age !== undefined) user.age = age === "" ? undefined : Number(age);
+    if (location !== undefined) user.location = location;
 
     await user.save();
 

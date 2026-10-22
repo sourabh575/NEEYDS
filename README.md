@@ -1,655 +1,204 @@
-# 🏠 NEEYDS — Smart Roommate & Room Finder Platform
+# NEEYDS — Roommate and Room Finder
 
-> A modern, full-stack MERN application connecting people looking for roommates and rooms with an intuitive interface and powerful filtering capabilities.
+NEEYDS is a full-stack MERN application that helps people find an available room or a compatible person to search for a room with. It turns an informal, trust-sensitive process—usually handled through WhatsApp groups or word of mouth—into structured listings, filtering, saved posts, and consent-based contact sharing.
 
-<div align="center">
+## Interview summary
 
-![React](https://img.shields.io/badge/React-19-blue?logo=react)
-![Node.js](https://img.shields.io/badge/Node.js-20LTS-green?logo=node.js)
-![MongoDB](https://img.shields.io/badge/MongoDB-6.0-green?logo=mongodb)
-![Vite](https://img.shields.io/badge/Vite-5.0-purple?logo=vite)
-![License](https://img.shields.io/badge/License-ISC-blue)
+**Problem:** Finding a room or roommate is slow because information is scattered, incomplete, and contact details are often shared too early.
 
-**[Live Demo](#-deployment-guide) • [Features](#-features) • [Installation](#-installation) • [Documentation](#-documentation)**
+**Solution:** NEEYDS supports two listing types:
 
-</div>
+- **Join My Flat:** a user already has a room and wants a roommate.
+- **Partner Up:** a user wants a compatible partner to look for accommodation together.
 
----
+**Why it matters:** Budget, location, gender preference, occupation, move-in date, and room type make matching faster. The request-and-approval flow protects users from exposing personal phone numbers to everyone who views a listing.
 
-## ✨ Features
+## How it works
 
-### 🎯 Core Features
-- **Smart Authentication System**
-  - JWT-based authentication with auto-logout on token expiration
-  - Secure password hashing with bcryptjs
-  - Protected routes and API endpoints
-  - Google OAuth integration (optional)
-
-- **Modern Feed Interface**
-  - Beautiful card-based layout with hover animations
-  - Real-time image gallery with thumbnail navigation
-  - User profile cards directly in feed
-  - Type indicators (🏠 I Have a Room / 🔍 Need a Room)
-
-- **Advanced Filtering**
-  - Filter by post type (looking to share / looking to find)
-  - Filter by gender preference
-  - Budget-based filtering
-  - Location-based search
-
-- **User Profile Management**
-  - View and edit user profile
-  - Gender and occupation information
-  - Active status indicators
-  - Profile avatar support
-
-- **Post Management**
-  - Create detailed listings with photos
-  - Edit and delete your posts
-  - View detailed post information
-  - Browse community listings
-
-- **Fully Responsive Design**
-  - Optimized for Desktop (1920px+)
-  - Optimized for Laptop (1024px - 1919px)
-  - Optimized for Tablet (768px - 1023px)
-  - Optimized for Mobile (320px - 767px)
-
----
-
-## 🎨 UI/UX Improvements (Latest Updates)
-
-### Enhanced Feed Page
-- **Modern Card Design**: Sleek cards with smooth hover animations and depth effects
-- **Image Gallery Component**: Beautiful image carousel with thumbnail navigation and error handling
-- **User Profile Cards**: Informative user badges showing name, age, gender, occupation, and active status
-- **Gradient Backgrounds**: Eye-catching gradient UI elements throughout
-- **Improved Typography**: Better font hierarchy and readability
-- **Visual Feedback**: Smooth transitions and interactive elements
-
-### Better Image Handling
-- **Image Upload Integration**: Support for multiple room photos
-- **Placeholder Images**: Graceful fallbacks when images aren't available
-- **Gallery Navigation**: Easy image browsing with next/previous controls
-- **Performance Optimized**: Lazy loading and optimized image handling
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-- **React 19** - Modern UI library
-- **React Router DOM** - Client-side routing
-- **Vite** - Lightning-fast build tool
-- **Axios** - HTTP client
-- **CSS3** - Modern styling with gradients and animations
-
-### Backend
-- **Node.js** - JavaScript runtime
-- **Express 5** - Web framework
-- **MongoDB** - NoSQL database
-- **Mongoose** - ODM for MongoDB
-- **JWT** - Token-based authentication
-- **bcryptjs** - Password hashing
-- **CORS** - Cross-origin resource sharing
-
-### Deployment
-- **Render** - Backend hosting
-- **Vercel** - Frontend hosting
-- **MongoDB Atlas** - Cloud database
-
----
-
-## 📁 Updated Project Structure
-
-```
-roommate-finder/
-├── client/                           # React Frontend
-│   ├── src/
-│   │   ├── api/
-│   │   │   └── axios.js             # API configuration
-│   │   ├── components/
-│   │   │   ├── UserProfileCard.jsx  # ✨ New user profile display
-│   │   │   ├── ImageGallery.jsx     # ✨ New image gallery
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── AuthNavbar.jsx
-│   │   │   └── GoogleAuthButton.jsx
-│   │   ├── pages/
-│   │   │   ├── Feed.jsx             # 🎨 Improved with new components
-│   │   │   ├── PostDetail.jsx
-│   │   │   ├── CreatePost.jsx
-│   │   │   ├── Profile.jsx
-│   │   │   ├── Login.jsx
-│   │   │   ├── Register.jsx
-│   │   │   ├── VerifyEmail.jsx
-│   │   │   └── Loginbygoogle.jsx
-│   │   ├── styles/
-│   │   │   ├── Feed.css             # 🎨 Modernized styling
-│   │   │   ├── UserProfileCard.css  # ✨ New styles
-│   │   │   ├── ImageGallery.css     # ✨ New styles
-│   │   │   ├── CreatePost.css
-│   │   │   ├── Profile.css
-│   │   │   ├── Login.css
-│   │   │   ├── PostDetail.css
-│   │   │   └── Register.css
-│   │   ├── utils/
-│   │   │   └── auth.js              # Auth utilities
-│   │   ├── App.jsx
-│   │   ├── App.css
-│   │   ├── index.css
-│   │   └── main.jsx
-│   ├── vite.config.js
-│   ├── package.json
-│   └── index.html
-│
-├── backend/                          # Node.js Backend
-│   ├── config/
-│   │   └── db.js                    # MongoDB connection
-│   ├── controllers/
-│   │   ├── authController.js        # Auth logic
-│   │   ├── userController.js        # User management
-│   │   ├── postController.js        # Post management
-│   │   ├── roomController.js
-│   │   ├── partnerController.js
-│   │   ├── pgController.js
-│   │   └── googleLogin.js
-│   ├── middleware/
-│   │   ├── authMiddleware.js        # JWT verification
-│   │   └── errorMiddleware.js       # Error handling
-│   ├── models/
-│   │   ├── User.js
-│   │   ├── Post.js
-│   │   ├── Room.js
-│   │   ├── Partner.js
-│   │   └── PG.js
-│   ├── routes/
-│   │   ├── authRoutes.js
-│   │   ├── user.routes.js
-│   │   ├── post.routes.js
-│   │   ├── roomRoutes.js
-│   │   ├── partnerRoutes.js
-│   │   └── pgRoutes.js
-│   ├── utils/
-│   │   ├── uploadUtils.js           # File upload handling
-│   │   ├── emailService.js          # Email utilities
-│   │   ├── generateToken.js
-│   │   ├── tokenUtils.js
-│   │   └── auth.js
-│   ├── server.js
-│   └── package.json
-│
-├── QUICK_START.md                   # Quick setup guide
-├── COMPLETE_REFERENCE.md            # API Reference
-├── IMPLEMENTATION_SUMMARY.md        # Feature summary
-├── UPGRADE_GUIDE.md                 # Version updates
-└── README.md                        # This file
+```text
+React client → Express REST API → MongoDB
+                   │
+                   ├─ JWT authentication
+                   ├─ Google identity-token verification
+                   └─ Cloudinary image storage
 ```
 
----
+1. A user registers with email/password or signs in with Google.
+2. The backend hashes local passwords with bcrypt and issues a 30-day JWT.
+3. The client sends the JWT as `Authorization: Bearer <token>` for protected requests.
+4. A user creates a room listing with up to five room photos, or a partner listing with a profile image.
+5. Other users filter and save listings, then request contact details from a post owner.
+6. The owner accepts or rejects the request. Phone numbers are included only for accepted requests.
 
-## 🚀 Getting Started (Local Development)
+## Key features
 
-### Prerequisites
-- **Node.js** v16+ ([Download](https://nodejs.org/))
-- **MongoDB** (Local or [MongoDB Atlas](https://www.mongodb.com/cloud/atlas))
-- **npm** or **yarn** package manager
-- **Git** (optional)
+- Email/password authentication with bcrypt hashing and JWT-protected APIs
+- Google sign-in using a verified Google ID token
+- Two purpose-built listing workflows with server-side validation
+- Cloudinary-backed image upload, replacement, and cleanup
+- Feed filters for listing type, gender preference, budget, and location
+- Wishlist for saved listings
+- Contact-request workflow that reveals phone numbers only after approval
+- Responsive React UI with image-gallery fallbacks
 
-### Step 1: Clone & Install
+## Example
+
+Priya has an empty room in a 2BHK near Indiranagar. She creates a **Join My Flat** listing with rent of ₹15,000, room photos, amenities, and a preference for a working female roommate.
+
+Ananya filters the feed by location and budget, saves Priya's listing, then sends an interest request. Priya sees the request in **Requests** and accepts it. Only then do both users see each other's phone number, so they can arrange a viewing.
+
+## Tech stack
+
+| Layer | Technology | Role |
+| --- | --- | --- |
+| Frontend | React 19, React Router, Vite, Axios | Single-page UI, routing, API communication |
+| Backend | Node.js, Express 5 | REST endpoints and business rules |
+| Database | MongoDB with Mongoose | Users, listings, wishlists, and contact requests |
+| Auth | JWT, bcryptjs, Google Auth Library | Authenticated and secure access |
+| Media | Multer, Cloudinary | Image validation and storage |
+
+## Project structure
+
+```text
+client/                 React application
+  src/pages/            Login, profile, feed, listing, wishlist, requests
+  src/components/       Navigation, cards, image gallery
+  src/api/axios.js      Shared API client and auth interceptor
+backend/                Express API
+  controllers/          Authentication, users, posts, wishlist, requests
+  models/               Mongoose schemas
+  routes/               REST route definitions
+  middleware/           JWT protection and upload handling
+```
+
+## Run locally
+
+Prerequisites: Node.js 20+ and a MongoDB database. You also need a Cloudinary account for image uploads; Google login is optional.
 
 ```bash
-# Clone repository
-git clone <repository-url>
-cd roommate-finder
-
-# Install backend dependencies
 cd backend
 npm install
 
-# Install frontend dependencies
 cd ../client
 npm install
 ```
 
-### Step 2: Environment Setup
+Create `backend/.env`:
 
-**Create `.env` file in `backend/` directory:**
 ```env
-# MongoDB
-MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/<dbname>?retryWrites=true&w=majority
-
-# Server
+MONGO_URI=mongodb+srv://<user>:<password>@<cluster>/<database>
+JWT_SECRET=<long-random-secret>
 PORT=5000
-NODE_ENV=development
-
-# JWT
-JWT_SECRET=your_super_secret_jwt_key_generate_with_openssl_rand_base64_32
-
-# CORS
-FRONTEND_URL=http://localhost:5173
-
-# Email (optional)
-EMAIL_SERVICE=gmail
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_app_password
+CLOUDINARY_CLOUD_NAME=<cloud-name>
+CLOUDINARY_API_KEY=<api-key>
+CLOUDINARY_API_SECRET=<api-secret>
+GOOGLE_CLIENT_ID=<optional-google-client-id>
 ```
 
-**Create `.env` file in `client/` directory:**
+Create `client/.env`:
+
 ```env
 VITE_API_URL=http://localhost:5000/api
+VITE_GOOGLE_CLIENT_ID=<optional-google-client-id>
 ```
 
-### Step 3: Start Development Servers
+Start the backend and frontend in separate terminals:
 
-**Terminal 1 - Backend:**
 ```bash
 cd backend
 npm start
 ```
-✅ Backend runs on `http://localhost:5000`
 
-**Terminal 2 - Frontend:**
 ```bash
 cd client
 npm run dev
 ```
-✅ Frontend runs on `http://localhost:5173`
 
-### Step 4: Open Application
-Navigate to `http://localhost:5173` in your browser
+## Deploy to Render and Vercel
 
----
+This repository is split into two deployments: the Express API on Render and the Vite single-page app on Vercel. Deploy each from the repository root with the service root directory set as shown below. Do not commit `.env` files or paste secret values into the Vercel frontend environment; Vite variables are public in the built JavaScript.
 
-## 📝 API Endpoints Reference
+### Render API
 
-### 🔐 Authentication Endpoints
+Create a Render Blueprint from this repository using the root `render.yaml`, or create a **Web Service** manually with:
 
-#### Register User
+- Root directory: `backend`
+- Runtime: Node
+- Build command: `npm ci`
+- Start command: `npm start`
+- Health check path: `/health`
+
+Set `MONGO_URI` to your MongoDB Atlas connection string and `JWT_SECRET` to a long random secret. Set `FRONTEND_URL` to the deployed Vercel origin, for example `https://your-project.vercel.app` (no trailing slash). Set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` for image uploads. Google login needs `GOOGLE_CLIENT_ID`; email verification needs `RESEND_API_KEY`, `FROM_EMAIL`, and `FRONTEND_URL`. Render provides `PORT` automatically.
+
+In MongoDB Atlas, allow connections from Render (for a quick setup, `0.0.0.0/0` with a strong database password; restrict further if you have stable outbound IPs). Configure the Google OAuth authorized JavaScript origins with the Vercel domain and add the matching client ID to both services.
+
+### Vercel frontend
+
+Import this repository as a Vercel project and set:
+
+- Root directory: `client`
+- Framework preset: Vite
+- Build command: `npm run build`
+- Output directory: `dist`
+- Install command: `npm ci`
+
+Set `VITE_API_URL` to `https://<your-render-service>.onrender.com/api` and `VITE_GOOGLE_CLIENT_ID` to the same Google OAuth client ID used on Render. Redeploy after setting environment variables. The `client/vercel.json` rewrite supports client-side routes.
+
+After the first Vercel deploy, copy its production origin into Render's `FRONTEND_URL`, then redeploy/restart the Render service. If you use a custom Vercel domain, update `FRONTEND_URL` to that origin too. Test `/health`, signup/login, image upload, and a nested route after both deployments finish.
+
+### Before deploying
+
+- Ensure the repository has the latest intended changes committed and pushed. This working tree already contains other uncommitted changes; review them before deploying.
+- Rotate any secrets that have ever been committed or shared, and keep production values in the hosting providers' environment settings.
+- `backend/.env.example` documents the variables the API reads. `client/.env.example` documents the two `VITE_` variables; set the production API URL there in Vercel rather than using the local fallback.
+- Render's free web services may sleep when idle; the first request after inactivity can be slow. Choose a paid instance if that delay is unsuitable.
+
+## API examples
+
+Register a user:
+
 ```http
 POST /api/users/register
 Content-Type: application/json
 
 {
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "securePassword123",
-  "gender": "Male"
+  "name": "Ananya Sharma",
+  "email": "ananya@example.com",
+  "password": "a-strong-password",
+  "phone": "9876543210"
 }
 ```
 
-#### Login
+Create a contact request:
+
 ```http
-POST /api/users/login
+POST /api/contact-request/send
+Authorization: Bearer <jwt>
 Content-Type: application/json
 
-{
-  "email": "john@example.com",
-  "password": "securePassword123"
-}
+{ "receiverId": "<post-owner-id>", "postId": "<post-id>" }
 ```
 
-Response:
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "_id": "63f7a1b2c4d5e6f7g8h9i0j1",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "gender": "Male"
-  }
-}
-```
+## Design and security decisions to discuss
 
-### 👤 User Endpoints
+- Passwords are never stored in plain text; bcrypt hashes them before persistence.
+- The backend verifies JWTs and authorizes ownership before profile or post updates.
+- The server checks that a request targets the post owner and prevents self-requests and duplicates.
+- Phone numbers are removed from pending and rejected request responses.
+- Image uploads accept image MIME types only, cap each image at 5 MB, and limit a listing to five files.
+- Replacing an image saves the database update before old Cloudinary assets are deleted. Failed updates clean up newly uploaded files to prevent orphaned media.
 
-#### Get Profile
-```http
-GET /api/users/profile
-Authorization: Bearer <token>
-```
+## Recent maintenance fixes
 
-#### Update Profile
-```http
-PUT /api/users/:id
-Authorization: Bearer <token>
-Content-Type: application/json
+- Profile `age` and `location` are now persisted; previously the UI collected them but the server discarded them.
+- The client has a local API URL fallback for development when `VITE_API_URL` is absent.
+- Listing type is immutable after creation, preventing inconsistent data between the two listing models.
+- The frontend lint check is clean.
 
-{
-  "name": "John Updated",
-  "gender": "Male",
-  "location": "Bangalore",
-  "avatar": "https://example.com/avatar.jpg"
-}
-```
+## Useful commands
 
-### 📌 Post Endpoints
-
-#### Get All Posts (with filters)
-```http
-GET /api/posts?type=join-my-flat&genderPref=male&budget=10000&location=Bangalore
-```
-
-#### Get Single Post
-```http
-GET /api/posts/:id
-```
-
-#### Create Post
-```http
-POST /api/posts
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "name": "Looking for Roommate",
-  "type": "join-my-flat",
-  "location": "Bangalore",
-  "rent": 8000,
-  "genderPreference": "male",
-  "description": "Spacious 2BHK apartment",
-  "roomType": "2BHK",
-  "sharingType": "double",
-  "amenities": ["wifi", "ac", "kitchen"],
-  "roomPhotos": ["https://example.com/photo1.jpg"]
-}
-```
-
-#### Update Post
-```http
-PUT /api/posts/:id
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "rent": 9000,
-  "description": "Updated description"
-}
-```
-
-#### Delete Post
-```http
-DELETE /api/posts/:id
-Authorization: Bearer <token>
-```
-
----
-
-## 🌐 Deployment Guide
-
-### Deploy Backend on Render
-
-1. **Connect Repository**
-   - Go to [render.com](https://render.com)
-   - Click "New +" → "Web Service"
-   - Connect your GitHub repository
-
-2. **Configure Service**
-   - **Name**: `neeyds-backend`
-   - **Environment**: Node
-   - **Build Command**: `cd backend && npm install`
-   - **Start Command**: `cd backend && npm start`
-   - **Root Directory**: (leave empty)
-
-3. **Set Environment Variables**
-   ```env
-   MONGO_URI=mongodb+srv://...
-   JWT_SECRET=your_secret_key
-   PORT=10000
-   FRONTEND_URL=https://your-app.vercel.app
-   ```
-
-4. **Deploy**
-   - Click "Create Web Service"
-   - Wait for deployment
-   - Note your service URL
-
-### Deploy Frontend on Vercel
-
-1. **Connect Repository**
-   - Go to [vercel.com](https://vercel.com)
-   - Click "Add New" → "Project"
-   - Import your GitHub repository
-
-2. **Configure Project**
-   - **Root Directory**: `client`
-   - **Framework**: Vite
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-
-3. **Set Environment Variables**
-   ```env
-   VITE_API_URL=https://your-backend.onrender.com/api
-   ```
-
-4. **Deploy**
-   - Click "Deploy"
-   - Wait for deployment
-   - Access your live app!
-
----
-
-## 🧪 Testing Checklist
-
-### Local Development
-- [ ] Backend server starts
-- [ ] Frontend server starts
-- [ ] Can register new account
-- [ ] Can login with credentials
-- [ ] JWT token stored in localStorage
-- [ ] Can view profile
-- [ ] Can create new post
-- [ ] Can view feed with posts
-- [ ] Filters work correctly
-- [ ] Images display properly
-- [ ] Can logout successfully
-
-### Production
-- [ ] Backend deployed on Render
-- [ ] Frontend deployed on Vercel
-- [ ] Environment variables configured
-- [ ] MongoDB Atlas connection works
-- [ ] CORS allows frontend domain
-- [ ] All endpoints accessible
-- [ ] Authentication working
-- [ ] Image gallery functional
-
----
-
-## 🔒 Security Best Practices
-
-✅ **Implemented**
-- Password hashing with bcryptjs
-- JWT-based authentication
-- Protected API routes
-- Input validation on backend
-- CORS configured for production
-- Environment variables for secrets
-- Secure password storage
-
-⚠️ **Production Recommendations**
-- Use HTTPS only (enforced by Vercel/Render)
-- Consider httpOnly cookies for tokens
-- Add rate limiting on auth endpoints
-- Implement email verification
-- Add request validation middleware
-- Use environment secrets in CI/CD
-
----
-
-## 🐛 Troubleshooting
-
-### Backend Issues
-
-**MongoDB Connection Error**
-```
-Error: connect EREFUSED localhost:27017
-```
-Solution: 
-- Verify MongoDB is running locally OR
-- Check MONGO_URI in .env for Atlas account
-- Ensure IP whitelist includes your address
-
-**Port Already in Use**
-```
-Error: listen EADDRINUSE :::5000
-```
-Solution:
 ```bash
-# Kill process on port 5000
-# Windows
-netstat -ano | findstr :5000
-taskkill /PID <PID> /F
+cd client && npm run lint
+cd client && npm run build
+cd backend && npm start
 ```
-
-**JWT Authentication Failing**
-- Verify JWT_SECRET is set in backend .env
-- Check Authorization header format: `Bearer <token>`
-- Ensure token hasn't expired
-
-### Frontend Issues
-
-**API Call Failing (CORS)**
-```
-Access to XMLHttpRequest blocked by CORS policy
-```
-Solution:
-- Check FRONTEND_URL in backend .env
-- Ensure VITE_API_URL in frontend .env is correct
-- Clear browser cache and restart dev server
-
-**Images Not Showing**
-- Verify image URLs are accessible
-- Check network tab for 403/404 errors
-- Ensure image URLs support CORS
-
-**Build Fails on Vercel**
-- Ensure Root Directory is set to `client`
-- Verify all imports are correct
-- Check package.json has build script
-- Clear cache and redeploy
-
----
-
-## 📊 Project Statistics
-
-- **Frontend Components**: 10+
-- **Backend Routes**: 25+
-- **Database Models**: 5
-- **API Endpoints**: 20+
-- **UI Improvements**: Modern gradients, animations, responsive design
-- **Responsive Breakpoints**: 4 (Desktop, Laptop, Tablet, Mobile)
-
----
-
-## 🎯 Roadmap & Future Enhancements
-
-### Phase 2 (upcoming)
-- [ ] Advanced matching algorithm
-- [ ] Messaging system between users
-- [ ] User reviews and ratings
-- [ ] Favorites/bookmark functionality
-- [ ] Map integration for locations
-- [ ] Advanced search with "smart match"
-
-### Phase 3
-- [ ] Mobile app (React Native)
-- [ ] Real-time notifications
-- [ ] Payment integration
-- [ ] Verified user badges
-- [ ] AI-powered recommendations
-
----
-
-## 📚 Documentation Files
-
-- **[QUICK_START.md](./QUICK_START.md)** - 5-minute quick start guide
-- **[COMPLETE_REFERENCE.md](./COMPLETE_REFERENCE.md)** - Complete API reference
-- **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)** - Implementation details
-- **[UPGRADE_GUIDE.md](./UPGRADE_GUIDE.md)** - Version upgrade instructions
-
----
-
-## 💡 Key Technologies Explained
-
-### Why Vite?
-- ⚡ Lightning-fast HMR (Hot Module Replacement)
-- 📦 Zero-config build setup
-- 🚀 Optimized production builds
-- 📊 Modern ES modules support
-
-### Why MongoDB?
-- 🔄 Flexible document schema
-- 📈 Scales horizontally
-- 🛠️ Rich query capabilities
-- 🌍 Global replication support
-
-### Why JWT?
-- 🔐 Stateless authentication
-- 📱 Perfect for APIs
-- 🌐 Works across domains
-- ⏱️ Built-in expiration
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the ISC License - see the `package.json` file for details.
-
----
-
-## 👨‍💻 Author
-
-**Sourabh Patel**
-- GitHub: [@sourabh575](https://github.com/sourabh575)
-- Repository: [NEEYDS](https://github.com/sourabh575/NEEYDS)
-
----
-
-## 🙏 Acknowledgments
-
-- React team for an amazing framework
-- Express.js community for robust backend framework
-- MongoDB for powerful database
-- All contributors and testers
-
----
-
-## 📞 Support & Contact
-
-- 📧 Email: [your-email@example.com]
-- 🐙 GitHub Issues: [Create an issue](https://github.com/sourabh575/NEEYDS/issues)
-- 💬 Discussions: [Join discussions](https://github.com/sourabh575/NEEYDS/discussions)
-
----
-
-## 🔗 Useful Resources
-
-- [Render Documentation](https://render.com/docs)
-- [Vercel Documentation](https://vercel.com/docs)
-- [MongoDB Shell Guide](https://docs.mongodb.com/mongodb-shell/)
-- [React Documentation](https://react.dev)
-- [Express.js Guide](https://expressjs.com)
-- [JWT.io](https://jwt.io)
-
----
-
-<div align="center">
-
-**Made with ❤️ to help people find their perfect roommate**
-
-⭐ If you like this project, please give it a star!
-
-</div>
